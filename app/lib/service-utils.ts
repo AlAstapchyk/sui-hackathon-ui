@@ -10,3 +10,16 @@ export function formatPrice(priceMist: number): string {
   if (priceInSui >= 0.001) return (priceInSui * 1000).toFixed(4) + "m";
   return (priceMist / 1_000_000).toFixed(4) + "μ";
 }
+
+export function formatSubscriptionAmount(amount: number): string {
+  if (amount >= 1_000_000_000) {
+    return `${(amount / 1_000_000_000).toFixed(4)} SUI`;
+  }
+  if (amount >= 1_000_000) {
+    return `${(amount / 1_000_000).toFixed(2)}M MIST`;
+  }
+  if (amount >= 1_000) {
+    return `${(amount / 1_000).toFixed(2)}K MIST`;
+  }
+  return `${amount} MIST`;
+}

@@ -5,6 +5,7 @@ import { getService } from '@/app/lib/service-utils';
 import ServiceHeader from '@/app/components/service/ServiceHeader';
 import ServiceNav from '@/app/components/service/ServiceNav';
 import ServiceAccessPanel from '@/app/components/service/ServiceAccessPanel';
+import ScrollToTop from '@/app/components/ScrollToTop';
 
 interface ServiceLayoutProps {
     children: React.ReactNode;
@@ -22,6 +23,7 @@ export default async function ServiceLayout({ children, params }: ServiceLayoutP
     if (!service.pricingTiers) {
         return (
             <div className="min-h-screen bg-slate-900">
+                <ScrollToTop />
                 <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 mb-8">
                     <Link
                         href="/"
@@ -41,6 +43,7 @@ export default async function ServiceLayout({ children, params }: ServiceLayoutP
 
     return (
         <div className="min-h-screen bg-slate-900">
+            <ScrollToTop />
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 mb-8">
                 <Link
                     href="/"

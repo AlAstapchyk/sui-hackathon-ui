@@ -1,5 +1,6 @@
 import { useSuiClient, useCurrentAccount } from "@mysten/dapp-kit";
 import { useQuery } from "@tanstack/react-query";
+import { Transaction } from "@mysten/sui/transactions";
 import { PACKAGE_ID, REGISTRY_ID } from "../constants";
 
 export interface Subscription {
@@ -9,8 +10,8 @@ export interface Subscription {
 }
 
 /**
- * Fetches the user's subscription for a specific service from the challenge contract.
- * Subscriptions are stored as dynamic fields on the ServiceRegistry.
+ * Fetches the user's subscription amount using devInspect.
+ * Calls get_subscription_amount(registry, user, service_id)
  */
 export function useUserSubscription(serviceId: number = 1) {
   const client = useSuiClient();
@@ -22,33 +23,41 @@ export function useUserSubscription(serviceId: number = 1) {
       if (!account?.address) return null;
 
       try {
-        // Query dynamic field using SubscriptionKey { service_id, user }
-        const dynamicField = await client.getDynamicFieldObject({
-          parentId: REGISTRY_ID,
-          name: {
-            type: `${PACKAGE_ID}::challenge::SubscriptionKey`,
-            value: {
-              service_id: serviceId.toString(),
-              user: account.address,
-            },
-          },
+        const tx = new Transaction();
+        tx.moveCall({
+          target: `${PACKAGE_ID}::challenge::get_subscription_amount`,
+          arguments: [
+            tx.object(REGISTRY_ID),
+            tx.pure.address(account.address),
+            tx.pure.u64(serviceId),
+          ],
         });
 
-        if (!dynamicField.data?.content) return null;
+        const result = await client.devInspectTransactionBlock({
+          transactionBlock: tx,
+          sender: account.address,
+        });
 
-        const content = dynamicField.data.content as any;
-        const subscriptionField = content?.fields?.value?.fields;
+        console.log("devInspect result:", result);
 
-        if (!subscriptionField) return null;
+        if (result.results && result.results.length > 0) {
+          const returnValues = result.results[0].returnValues;
+          if (returnValues && returnValues.length > 0) {
+            const [amountBytes] = returnValues[0];
+            const amount = new DataView(new Uint8Array(amountBytes).buffer).getBigUint64(0, true);
+            console.log("Subscription amount:", amount.toString());
 
-        return {
-          serviceId: Number(subscriptionField.service_id || serviceId),
-          amount: Number(subscriptionField.amount || 0),
-          user: subscriptionField.user || account.address,
-        };
+            return {
+              serviceId,
+              amount: Number(amount),
+              user: account.address,
+            };
+          }
+        }
+
+        return null;
       } catch (error) {
-        // Dynamic field doesn't exist = no subscription
-        console.log("No subscription found for user:", error);
+        console.log("Error fetching subscription:", error);
         return null;
       }
     },
@@ -58,17 +67,45 @@ export function useUserSubscription(serviceId: number = 1) {
 }
 
 /**
- * Format the subscription amount as MIST or SUI
+ * Fetches the price per request for a service using devInspect.
+ * Calls get_request_price_per_request(registry, service_id)
  */
-export function formatSubscriptionAmount(amount: number): string {
-  if (amount >= 1_000_000_000) {
-    return `${(amount / 1_000_000_000).toFixed(4)} SUI`;
-  }
-  if (amount >= 1_000_000) {
-    return `${(amount / 1_000_000).toFixed(2)}M MIST`;
-  }
-  if (amount >= 1_000) {
-    return `${(amount / 1_000).toFixed(2)}K MIST`;
-  }
-  return `${amount} MIST`;
+export function useRequestPrice(serviceId: number = 1) {
+  const client = useSuiClient();
+
+  return useQuery({
+    queryKey: ["requestPrice", serviceId, PACKAGE_ID],
+    queryFn: async (): Promise<number | null> => {
+      try {
+        const tx = new Transaction();
+        tx.moveCall({
+          target: `${PACKAGE_ID}::challenge::get_request_price_per_request`,
+          arguments: [tx.object(REGISTRY_ID), tx.pure.u64(serviceId)],
+        });
+
+        const result = await client.devInspectTransactionBlock({
+          transactionBlock: tx,
+          sender: "0x0000000000000000000000000000000000000000000000000000000000000000",
+        });
+
+        console.log("Request price devInspect result:", result);
+
+        if (result.results && result.results.length > 0) {
+          const returnValues = result.results[0].returnValues;
+          if (returnValues && returnValues.length > 0) {
+            const [priceBytes] = returnValues[0];
+            const price = new DataView(new Uint8Array(priceBytes).buffer).getBigUint64(0, true);
+            console.log("Request price per request:", price.toString(), "MIST");
+            return Number(price);
+          }
+        }
+
+        return null;
+      } catch (error) {
+        console.log("Error fetching request price:", error);
+        return null;
+      }
+    },
+    refetchInterval: 60000,
+  });
 }

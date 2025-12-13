@@ -86,39 +86,39 @@ export default function BlockberryApiExplorer() {
 
         return {
             shell: `curl --request POST \\
-                    --url '${baseUrl}' \\
-                    --header 'accept: */*' \\
-                    --header 'content-type: application/json' \\
-                    --header 'x-api-key: YOUR_API_KEY' \\
-                    --data '${bodyData}'`,
+    --url '${baseUrl}' \\
+    --header 'accept: */*' \\
+    --header 'content-type: application/json' \\
+    --header 'x-api-key: YOUR_API_KEY' \\
+    --data '${bodyData}'`,
             nodejs: `const axios = require('axios');
 
-                    const response = await axios.post(
-                    '${baseUrl}',
-                    { categories: ['${category}'] },
-                    {
-                        headers: {
-                        'accept': '*/*',
-                        'content-type': 'application/json',
-                        'x-api-key': 'YOUR_API_KEY'
-                        }
-                    }
-                    );
+    const response = await axios.post(
+    '${baseUrl}',
+    { categories: ['${category}'] },
+    {
+        headers: {
+        'accept': '*/*',
+        'content-type': 'application/json',
+        'x-api-key': 'YOUR_API_KEY'
+        }
+    }
+    );
 
-                    console.log(response.data);`,
+    console.log(response.data);`,
             python: `import requests
 
-                    response = requests.post(
-                        '${baseUrl}',
-                        json={'categories': ['${category}']},
-                        headers={
-                            'accept': '*/*',
-                            'content-type': 'application/json',
-                            'x-api-key': 'YOUR_API_KEY'
-                        }
-                    )
+    response = requests.post(
+        '${baseUrl}',
+        json={'categories': ['${category}']},
+        headers={
+            'accept': '*/*',
+            'content-type': 'application/json',
+            'x-api-key': 'YOUR_API_KEY'
+        }
+    )
 
-                    print(response.json())`
+    print(response.json())`
         };
     }, [category, page, size, orderBy, sortBy, selectedEndpoint]);
 

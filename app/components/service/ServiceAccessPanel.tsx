@@ -7,9 +7,9 @@ import {
 } from "@mysten/dapp-kit";
 import { Transaction } from '@mysten/sui/transactions';
 import { ServiceData } from '@/app/data/services';
-import { CheckCircleIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import { PACKAGE_ID, REGISTRY_ID } from '@/app/constants';
-import { useUserSubscription, formatSubscriptionAmount } from '@/app/hooks/useSubscription';
+import { useUserSubscription, useRequestPrice } from '@/app/hooks/useSubscription';
+import { CheckCircleIcon } from '@heroicons/react/24/outline';
 
 interface ServiceAccessPanelProps {
     service: ServiceData;
@@ -25,6 +25,12 @@ export default function ServiceAccessPanel({ service }: ServiceAccessPanelProps)
     const account = useCurrentAccount();
 
     const { data: subscription, isLoading: subLoading, refetch: refetchSubscription } = useUserSubscription(1);
+    const { data: requestPrice } = useRequestPrice(1);
+
+    // Log request price to console
+    if (requestPrice !== null && requestPrice !== undefined) {
+        console.log("💰 Request price for service 1:", requestPrice, "MIST");
+    }
 
     const calculatePriceInMist = (): number | null => {
         if (pricingType === 'free') {
@@ -68,7 +74,8 @@ export default function ServiceAccessPanel({ service }: ServiceAccessPanelProps)
             return;
         }
 
-        const priceInMist = calculatePriceInMist();
+        // const priceInMist = calculatePriceInMist();
+        const priceInMist = 3000;
         if (priceInMist === null) {
             alert("Unable to calculate price");
             return;
@@ -121,30 +128,13 @@ export default function ServiceAccessPanel({ service }: ServiceAccessPanelProps)
     return (
         <div className="sticky top-24 space-y-4">
             {subLoading ? (
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 animate-pulse">
-                    <div className="h-4 bg-slate-700 rounded w-1/2 mb-2"></div>
-                    <div className="h-6 bg-slate-700 rounded w-3/4"></div>
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-4 animate-pulse">
+                    <div className="h-4 bg-slate-700 rounded w-1/2"></div>
                 </div>
             ) : hasActiveSubscription ? (
-                <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-2xl p-6">
-                    <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-500/30 flex items-center justify-center">
-                            <CheckCircleIcon className="w-5 h-5 text-emerald-400" />
-                        </div>
-                        <div>
-                            <h3 className="text-lg font-bold text-emerald-400">Active Subscription</h3>
-                            <p className="text-sm text-slate-400">Service ID: {subscription.serviceId}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                        <CurrencyDollarIcon className="w-4 h-4 text-emerald-400" />
-                        <span className="text-emerald-300 font-medium">
-                            Balance: {formatSubscriptionAmount(subscription.amount)}
-                        </span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-2">
-                        Credits available for API requests
-                    </p>
+                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl px-4 py-3 flex items-center justify-between">
+                    <span className="text-sm text-slate-400">Requests available</span>
+                    <span className="text-lg font-bold text-emerald-400">{subscription.amount.toLocaleString()}</span>
                 </div>
             ) : null}
 

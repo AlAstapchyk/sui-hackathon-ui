@@ -11,6 +11,7 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@mysten/dapp-kit": "^0.19.11",
+    "mongodb": "^7.0.0",
     "motion": "^12.23.26",
     "next": "16.0.10",
     "react": "19.2.1",
