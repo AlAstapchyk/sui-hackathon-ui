@@ -2,40 +2,34 @@ export interface ServiceData {
   id: string;
   name: string;
   description: string;
-  // Full markdown description for detail page
   fullDescription?: string;
-  price_ms: number;
+  price_ms: number; // Price in Milliseconds or similar unit for internal calculation
   provider: string;
+  logo: string; // NEW FIELD
   providerAvatar?: string;
   category: string;
   tags: string[];
   is_verified?: boolean;
-  // Service metadata
   sla?: string;
   rateLimit?: string;
   tokensAccepted?: string[];
   endpoint?: string;
   docsUrl?: string;
   supportUrl?: string;
-  // Monthly subscription tiers
   pricingTiers?: {
     name: string;
     price: string;
     requests: string;
     features: string[];
   }[];
-  // Request packages (pay-per-use) - can be used alongside or instead of monthly tiers
   requestPackages?: {
     name: string;
     requests: number;
-    price: string; // e.g., "0.001 SUI"
-    pricePerRequest?: string; // e.g., "0.00001 SUI/req"
+    price: string;
+    pricePerRequest?: string;
   }[];
-  // Provider status
   acceptingNewUsers?: boolean;
-  // Technical specs
   latency?: string;
-  regions?: string[];
   uptime?: string;
 }
 
@@ -77,35 +71,13 @@ curl --request POST \\
   --header 'x-api-key: YOUR_API_KEY' \\
   --data '{"categories":"DEX"}'
 \`\`\`
-
-### Response Example
-
-\`\`\`json
-{
-  "content": [
-    {
-      "name": "Cetus",
-      "category": "DEX",
-      "currentTvl": 125000000,
-      "volume24h": 5000000
-    }
-  ],
-  "totalElements": 42
-}
-\`\`\`
-
-### Supported Chains
-
-- **Sui Mainnet** - Full indexing
-- **Walrus Mainnet** - Storage data
-- **Iota Mainnet/Testnet** - Full indexing
-- **Mina Mainnet/Devnet** - Full indexing
 `,
     price_ms: 500_000,
     provider: "Blockberry",
+    logo: "https://docs.blockberry.one/favicon.ico",
     providerAvatar: "https://docs.blockberry.one/favicon.ico",
     category: "Indexer",
-    tags: ["trending", "top-seller"],
+    tags: ["trending", "top-seller", "verified"],
     is_verified: true,
     sla: "99.9%",
     rateLimit: "10K req/min",
@@ -115,7 +87,6 @@ curl --request POST \\
     supportUrl: "https://docs.blockberry.one/reference/error-reference",
     acceptingNewUsers: true,
     latency: "<100ms",
-    regions: ["Global"],
     uptime: "99.9%",
     pricingTiers: [
       {
@@ -159,453 +130,402 @@ curl --request POST \\
     ],
   },
   {
-    id: "0x268060691fbe57a86e16d41a8ba0a277441a7566beb9ddb2774430d68ef4a912",
-    name: "SuiNode Pro RPC",
+    id: "quicknode-sui",
+    name: "QuickNode Sui RPC",
     description:
-      "Enterprise-grade Sui RPC endpoint with ultra-low latency, 99.99% uptime SLA, and dedicated support.",
+      "The most performant end-to-end development platform. Instant access to Sui Mainnet, Testnet, and Devnet.",
     fullDescription: `## Overview
 
-SuiNode Pro RPC provides enterprise-grade access to the Sui blockchain with ultra-low latency and 99.99% uptime SLA.
+QuickNode provides a globally distributed, high-performance node network for Sui. It includes advanced developer tools like Graph API, Streams, and Functions.
 
 ### Key Features
 
-- **Ultra-low latency**: <10ms average response time globally
-- **High throughput**: 10,000+ requests per second
-- **Archive access**: Full historical data since genesis
-- **WebSocket support**: Real-time subscriptions for events and transactions
+- **Elastic APIs**: Auto-scaling infrastructure that handles spikes.
+- **Streams**: Real-time data streaming for smart contract events.
+- **Marketplace Add-ons**: One-click integrations for additional tools.
 
 ### Supported Methods
-
-All standard Sui JSON-RPC methods including:
+Full JSON-RPC support including:
 - \`sui_getObject\`
-- \`sui_getTransaction\`
-- \`sui_executeTransactionBlock\`
-- \`sui_subscribeEvent\`
-
-### Use Cases
-
-Perfect for:
-- High-frequency trading bots
-- Production dApps requiring reliability
-- Analytics platforms needing archive data
-- Real-time monitoring dashboards
+- \`sui_moveCall\`
+- \`sui_getEvents\`
 
 ### Integration
 
 \`\`\`javascript
-import { SuiClient } from '@mysten/sui.js';
-
-const client = new SuiClient({
-  url: 'https://rpc.suinodepro.io'
+const solana = new QuickNode.Client({
+  network: 'sui-mainnet',
+  apiKey: 'YOUR_API_KEY'
 });
 \`\`\`
 `,
     price_ms: 1_000_000,
-    provider: "Sui Foundation",
+    provider: "QuickNode",
+    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGgLQz_slSGFrafFM9QK3iL1Ecu4YCT_EFIg&s",
     category: "RPC",
-    tags: ["trending", "supercharged"],
+    tags: ["infrastructure", "enterprise", "popular"],
     is_verified: true,
     sla: "99.99%",
-    rateLimit: "10K req/s",
+    rateLimit: "Unlimited (Tiered)",
     tokensAccepted: ["SUI", "USDC"],
-    endpoint: "https://rpc.suinodepro.io",
-    docsUrl: "https://docs.suinodepro.io",
-    supportUrl: "https://support.suinodepro.io",
+    endpoint: "https://api.quicknode.com/sui",
+    docsUrl: "https://marketplace.quicknode.com/explore/blockchain-data-and-analytics-apis",
     acceptingNewUsers: true,
-    latency: "<10ms",
-    regions: ["US-East", "EU-West", "Asia-Pacific"],
-    uptime: "99.99%",
+    latency: "<20ms",
     pricingTiers: [
       {
-        name: "Starter",
+        name: "Discover",
         price: "Free",
-        requests: "100K/month",
-        features: ["Basic RPC", "Community support"],
+        requests: "10M Credits",
+        features: ["Standard Support", "Core RPC"],
       },
       {
-        name: "Pro",
-        price: "0.001 SUI/s",
-        requests: "Unlimited",
-        features: ["All methods", "Priority support", "WebSocket"],
-      },
-      {
-        name: "Enterprise",
-        price: "Custom",
-        requests: "Unlimited",
-        features: ["Dedicated nodes", "SLA guarantee", "24/7 support"],
+        name: "Build",
+        price: "$49/mo",
+        requests: "500M Credits",
+        features: ["Archive Data", "Faster Response"],
       },
     ],
   },
   {
-    id: "mock-2",
-    name: "Index-O-Matic Pro",
+    id: "blockeden-api",
+    name: "BlockEden API",
     description:
-      "Real-time Sui blockchain indexer with GraphQL API for transactions, events, and custom Move structs.",
+      "A suite of APIs for Aptos and Sui developers. Power your dApps with reliable RPC and Indexer services.",
     fullDescription: `## Overview
 
-Index-O-Matic Pro is a high-performance indexer for the Sui blockchain, providing instant access to on-chain data through a powerful GraphQL API.
+BlockEden.xyz provides a unified API dashboard for high-performance blockchains like Sui and Aptos.
 
-### Key Features
+### Services
 
-- **Real-time indexing**: Sub-second latency from on-chain to API
-- **GraphQL API**: Flexible queries with complex filtering
-- **Custom indexing**: Index your own Move structs and events
-- **Historical data**: Full archive since Sui mainnet launch
+- **Sui RPC**: Standard JSON-RPC interface.
+- **Sui Indexer**: Query transactions and events via GraphQL.
+- **Global CDN**: Nodes distributed across 12 regions.
 
-### Query Examples
+### Usage
 
-\`\`\`graphql
-query GetTransactions {
-  transactions(
-    filter: { sender: "0x..." }
-    first: 10
-  ) {
-    digest
-    timestamp
-    effects { status }
-  }
-}
+\`\`\`bash
+curl https://api.blockeden.xyz/sui/YOUR_KEY \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "id": 1, "method": "sui_getTotalTransactionNumber", "params": []}'
 \`\`\`
-
-### Indexed Data
-
-- Transactions & effects
-- Events (all types)
-- Object snapshots
-- Coin balances
-- NFT metadata
-
-### Performance
-
-- 5,000 queries/second
-- <100ms p99 latency
-- 99.9% uptime SLA
 `,
-    price_ms: 500_000,
-    provider: "IndexLabs",
-    category: "Indexer",
-    tags: ["top-seller"],
+    price_ms: 400_000,
+    provider: "BlockEden",
+    logo: "https://www.datocms-assets.com/166214/1758969781-1696041330-project-icon_blockeden.png?auto=format&fit=max&w=1200",
+    category: "RPC",
+    tags: ["developer-tools", "api"],
     is_verified: true,
     sla: "99.9%",
-    rateLimit: "5K req/s",
+    rateLimit: "2000 req/s",
     tokensAccepted: ["SUI"],
-    docsUrl: "https://docs.indexomatic.io",
+    endpoint: "https://api.blockeden.xyz/sui",
+    docsUrl: "https://blockeden.xyz/sui/",
     acceptingNewUsers: true,
-    latency: "<100ms",
-    regions: ["Global CDN"],
+    pricingTiers: [
+      {
+        name: "Public",
+        price: "Free",
+        requests: "Limited",
+        features: ["Shared Nodes"],
+      },
+      {
+        name: "Growth",
+        price: "$40/mo",
+        requests: "20M req/mo",
+        features: ["Dedicated Gateway", "Analytics"],
+      },
+    ],
   },
   {
-    id: "mock-3",
-    name: "Walrus Storage Gateway",
+    id: "ankr-rpc",
+    name: "Ankr RPC Service",
     description:
-      "Decentralized storage powered by Walrus with on-chain access control and CDN-backed delivery.",
+      "Connect to Sui with a distributed network of nodes. The most popular decentralized RPC aggregator.",
     fullDescription: `## Overview
 
-Walrus Storage Gateway provides decentralized, censorship-resistant storage with seamless Sui blockchain integration.
-
-### Key Features
-
-- **Decentralized storage**: Data stored across Walrus network
-- **On-chain ACL**: Access control via Sui objects
-- **CDN delivery**: Fast global content delivery
-- **Encryption**: Optional client-side encryption
-
-### How It Works
-
-1. Upload file via API or SDK
-2. File stored on Walrus network
-3. Access token issued as Sui object
-4. Retrieve via CDN with valid entitlement
-
-### Supported Formats
-
-- Images (JPEG, PNG, WebP, SVG)
-- Documents (PDF, JSON, YAML)
-- Media (MP4, MP3)
-- Arbitrary blobs up to 1GB
-
-### SDK Example
-
-\`\`\`typescript
-import { WalrusClient } from '@walrus/sdk';
-
-const client = new WalrusClient({ wallet });
-const blobId = await client.upload(file);
-\`\`\`
-`,
-    price_ms: 200_000,
-    provider: "Mysten Labs",
-    category: "Storage",
-    tags: ["staff-pick", "supercharged"],
-    is_verified: true,
-    sla: "99.95%",
-    rateLimit: "1K req/s",
-    tokensAccepted: ["SUI", "WAL"],
-    docsUrl: "https://docs.walrus.site",
-    supportUrl: "https://discord.gg/walrus",
-    acceptingNewUsers: true,
-    latency: "<200ms",
-    regions: ["Decentralized"],
-  },
-  {
-    id: "mock-4",
-    name: "Sui Analytics Dashboard",
-    description:
-      "Comprehensive on-chain analytics for Sui: DeFi TVL, NFT volumes, DEX activity, and custom metrics.",
-    fullDescription: `## Overview
-
-Sui Analytics Dashboard provides comprehensive on-chain analytics with REST API access for DeFi, NFT, and ecosystem metrics.
-
-### Available Metrics
-
-- **DeFi**: TVL, trading volumes, liquidity pools
-- **NFTs**: Floor prices, volumes, holder counts
-- **DEX**: Swap volumes, price feeds, slippage
-- **Network**: TPS, gas prices, validator stats
-
-### API Endpoints
-
-- \`/api/v1/defi/tvl\` - Protocol TVL data
-- \`/api/v1/nft/collections\` - NFT collection stats
-- \`/api/v1/dex/pairs\` - DEX pair analytics
-- \`/api/v1/network/stats\` - Network metrics
-
-### Data Freshness
-
-- Real-time: <1 minute delay
-- Historical: Available since mainnet
-
-### Export Formats
-
-- JSON (default)
-- CSV
-- Parquet
-`,
-    price_ms: 800_000,
-    provider: "ChainPulse",
-    category: "Analytics",
-    tags: ["trending"],
-    is_verified: false,
-    sla: "99.5%",
-    rateLimit: "500 req/min",
-    tokensAccepted: ["SUI", "USDC", "USDT"],
-    docsUrl: "https://docs.chainpulse.io",
-    acceptingNewUsers: true,
-    latency: "<1s",
-  },
-  {
-    id: "mock-5",
-    name: "Move Debugger Pro",
-    description:
-      "Advanced debugging tools for Move smart contracts with step-through execution and vulnerability scanning.",
-    fullDescription: `## Overview
-
-Move Debugger Pro provides comprehensive debugging and security analysis tools for Move smart contracts on Sui.
+Ankr provides a geo-distributed network of Sui nodes, ensuring that your users always connect to the closest and fastest node available.
 
 ### Features
 
-- **Step-through debugging**: Line-by-line execution
-- **Gas profiling**: Identify expensive operations
-- **Vulnerability scanning**: Automated security checks
-- **Test coverage**: Measure code coverage
+- **Global Load Balancing**: Automatically routes requests to the healthiest nodes.
+- **WebSocket Support**: Subscribe to on-chain changes in real-time.
+- **Hybrid Infrastructure**: Combines bare-metal and cloud servers.
 
-### Security Checks
+### Endpoint
 
-- Reentrancy detection
-- Integer overflow/underflow
-- Access control issues
-- Unchecked external calls
-
-### Integration
-
-Works with:
-- VS Code extension
-- CLI tool
-- CI/CD pipelines
+\`https://rpc.ankr.com/sui\`
 `,
-    price_ms: 1_500_000,
-    provider: "SecureSui",
-    category: "Security",
-    tags: ["staff-pick"],
+    price_ms: 600_000,
+    provider: "Ankr",
+    logo: "https://images.seeklogo.com/logo-png/39/2/ankr-logo-png_seeklogo-398585.png",
+    category: "RPC",
+    tags: ["decentralized", "infrastructure"],
     is_verified: true,
-    sla: "99%",
-    rateLimit: "100 req/min",
-    tokensAccepted: ["SUI"],
-    docsUrl: "https://docs.securesui.io",
+    sla: "99.99%",
+    rateLimit: "Flexible",
+    tokensAccepted: ["ANKR", "SUI", "USDC"],
+    endpoint: "https://rpc.ankr.com/sui",
+    docsUrl: "https://www.ankr.com/docs/rpc-service/chains/chains-api/sui/",
     acceptingNewUsers: true,
+    latency: "<50ms",
+    pricingTiers: [
+      {
+        name: "Premium",
+        price: "Pay-as-you-go",
+        requests: "Unlimited",
+        features: ["Global Distribution", "Priority Traffic"],
+      },
+    ],
   },
   {
-    id: "mock-6",
-    name: "Sui Price Oracle",
+    id: "the-graph",
+    name: "The Graph",
     description:
-      "Decentralized price feeds for 500+ assets with sub-second updates and cryptographic attestations.",
+      "The indexing and query layer of the decentralized web. Build and publish open APIs (subgraphs).",
     fullDescription: `## Overview
 
-Sui Price Oracle provides decentralized, reliable price feeds for 500+ assets with cryptographic proofs and multi-source aggregation.
+The Graph is the standard for indexing blockchain data. Developers build "Subgraphs" that define how data should be ingested and queried via GraphQL.
 
-### Features
+### Supported Features
 
-- **500+ assets**: Crypto, forex, commodities
-- **Sub-second updates**: Real-time price data
-- **Multi-source**: Aggregated from 10+ exchanges
-- **Cryptographic proofs**: Verifiable on-chain
+- **GraphQL API**: Query exactly the data you need.
+- **Hosted Service**: Managed indexing for high uptime.
+- **Decentralized Network**: Unstoppable API powered by indexers.
 
-### Supported Assets
+### Query Example
 
-- Major cryptocurrencies (BTC, ETH, SUI, etc.)
-- Stablecoins (USDC, USDT, DAI)
-- DeFi tokens
-- NFT floor prices
-
-### On-Chain Integration
-
-\`\`\`move
-use oracle::price_feed;
-
-public fun get_price(asset: String): u64 {
-    price_feed::get_latest_price(asset)
+\`\`\`graphql
+{
+  swaps(first: 5) {
+    id
+    sender
+    amountIn
+    amountOut
+  }
 }
 \`\`\`
 `,
     price_ms: 300_000,
-    provider: "OracleNet",
-    category: "Data",
-    tags: ["trending", "top-seller"],
+    provider: "The Graph",
+    logo: "https://cryptologos.cc/logos/the-graph-grt-logo.png",
+    category: "Indexer",
+    tags: ["query", "graphql", "essential"],
     is_verified: true,
-    sla: "99.99%",
-    rateLimit: "Unlimited",
-    tokensAccepted: ["SUI", "USDC"],
-    docsUrl: "https://docs.oraclenet.io",
+    sla: "99.9%",
+    tokensAccepted: ["GRT", "SUI"],
+    docsUrl: "https://thegraph.com/docs/en/supported-networks/",
     acceptingNewUsers: true,
-    latency: "<500ms",
+    pricingTiers: [
+      {
+        name: "Query Fees",
+        price: "Variable",
+        requests: "Per-query",
+        features: ["Decentralized Indexing", "GraphQL"],
+      },
+    ],
   },
   {
-    id: "mock-7",
-    name: "NFT Metadata API",
+    id: "dune-analytics",
+    name: "Dune Analytics",
     description:
-      "Instant access to NFT metadata, ownership history, and floor prices for all Sui collections.",
+      "Unlock on-chain data with SQL. Create dashboards, visualize Sui metrics, and share insights.",
     fullDescription: `## Overview
 
-NFT Metadata API provides comprehensive NFT data including metadata, ownership history, and market analytics for all Sui collections.
+Dune allows anyone to query Sui blockchain data using simple SQL. Convert raw on-chain data into beautiful charts and dashboards.
 
-### Data Available
+### Sui Tables
 
-- **Metadata**: Name, description, attributes, image
-- **Ownership**: Current owner, transfer history
-- **Market**: Floor price, last sale, volume
+- \`sui.transactions\`
+- \`sui.events\`
+- \`sui.validators\`
 
-### Collections Indexed
+### API Access
 
-All Sui NFT collections including:
-- Prime Machin
-- Sui Punks
-- Sui Frens
-- And 1000+ more
+Integrate Dune charts directly into your application using the Dune API.
+`,
+    price_ms: 700_000,
+    provider: "Dune",
+    logo: "https://media.licdn.com/dms/image/v2/D560BAQHc05hZLAac1w/company-logo_200_200/B56ZpZ3PIsJsAM-/0/1762444243894/dune_analytics_logo?e=2147483647&v=beta&t=CnrKnORxhMw4IkZI6d_3JMjmRPwjNzDoqaVVtAQZ0Nw",
+    category: "Analytics",
+    tags: ["data", "visualization", "sql"],
+    is_verified: true,
+    sla: "99.5%",
+    tokensAccepted: ["USDC"],
+    docsUrl: "https://dune.com/data?category=canonical&namespace=sui",
+    acceptingNewUsers: true,
+    pricingTiers: [
+      {
+        name: "Free",
+        price: "Free",
+        requests: "Limited API",
+        features: ["Community Dashboards", "Standard SQL"],
+      },
+      {
+        name: "Plus",
+        price: "$399/mo",
+        requests: "CSV Exports",
+        features: ["Private Queries", "Faster Execution"],
+      },
+    ],
+  },
+  {
+    id: "akash-network",
+    name: "Akash Network",
+    description:
+      "The Supercloud for AI and compute. Deploy Docker containers on a decentralized marketplace at 85% lower cost.",
+    fullDescription: `## Overview
 
-### API Example
+Akash is a decentralized cloud computing marketplace. It connects those who need computing power (tenants) with those who have excess computing capacity (providers).
 
-\`\`\`bash
-curl https://api.nftscan.sui/v1/nft/{object_id}
+### Why Use Akash?
+
+- **Cost Savings**: Significantly cheaper than AWS/GCP.
+- **Permissionless**: No KYC, just deploy via CLI or Template.
+- **Sui Nodes**: Perfect for running dedicated Sui validators or full nodes.
+
+### Deploy
+
+\`\`\`yaml
+services:
+  web:
+    image: nginx
+    expose:
+      - port: 80
+        as: 80
 \`\`\`
 `,
-    price_ms: 250_000,
-    provider: "NFTScan",
-    category: "Data",
-    tags: [],
-    is_verified: false,
-    rateLimit: "2K req/s",
-    tokensAccepted: ["SUI"],
+    price_ms: 300_000,
+    provider: "Akash Network",
+    logo: "https://assets.coingecko.com/coins/images/12785/large/akash-logo.png",
+    category: "Compute",
+    tags: ["decentralized", "cloud", "ai"],
+    is_verified: true,
+    sla: "99.9%",
+    tokensAccepted: ["AKT", "USDC"],
+    docsUrl: "https://akash.network/",
     acceptingNewUsers: true,
+    pricingTiers: [
+      {
+        name: "Marketplace",
+        price: "Bid-based",
+        requests: "Hourly",
+        features: ["Docker Support", "Shell Access"],
+      },
+    ],
   },
   {
-    id: "mock-8",
-    name: "Transaction Simulator",
+    id: "walrus-storage",
+    name: "Walrus Storage",
     description:
-      "Simulate Sui transactions before execution to preview gas costs, object mutations, and potential errors.",
+      "Decentralized storage network by Mysten Labs. Store blobs efficiently and secure them with Sui smart contracts.",
     fullDescription: `## Overview
 
-Transaction Simulator allows you to dry-run Sui transactions before execution, previewing all effects without spending gas.
+Walrus provides a robust layer for storing large data files (blobs) that are too expensive to keep directly on the Sui blockchain.
 
-### What You Get
+### Key Features
 
-- **Gas estimation**: Accurate gas cost prediction
-- **Object mutations**: See all object changes
-- **Error detection**: Catch errors before execution
-- **Event preview**: See emitted events
+- **Sui Integration**: Manage file permissions using Sui Objects.
+- **Redundancy**: Data is erasure-coded and distributed.
+- **Low Cost**: Highly competitive pricing for archival data.
 
 ### Use Cases
 
-- Wallet transaction preview
-- Smart contract testing
-- Gas optimization
-- Error handling
-
-### API
-
-\`\`\`typescript
-const result = await simulator.dryRun({
-  transaction: tx,
-  sender: address
-});
-
-console.log(result.gasUsed);
-console.log(result.effects);
-\`\`\`
+- NFT Media (Images/Video)
+- dApp Hosting
+- AI Datasets
 `,
-    price_ms: 400_000,
-    provider: "SimulateSui",
-    category: "Compute",
-    tags: ["supercharged"],
+    price_ms: 250_000,
+    provider: "Mysten Labs",
+    logo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTbiGb-G_KsIcCG_4pQNEwoKJUWFywbr-NAUQ&s",
+    category: "Storage",
+    tags: ["storage", "official", "mysten"],
     is_verified: true,
     sla: "99.9%",
-    rateLimit: "1K req/s",
     tokensAccepted: ["SUI", "WAL"],
-    docsUrl: "https://docs.simulatesui.io",
+    docsUrl: "https://docs.walrus.site/",
     acceptingNewUsers: true,
-    latency: "<100ms",
+    pricingTiers: [
+      {
+        name: "Standard",
+        price: "Per GB",
+        requests: "Storage size",
+        features: ["Global Replication", "Fast Retrieval"],
+      },
+    ],
   },
   {
-    id: "mock-9",
-    name: "Sui Webhooks",
+    id: "filecoin-storage",
+    name: "Filecoin",
     description:
-      "Real-time event notifications for on-chain activity via HTTP callbacks for addresses, contracts, and events.",
+      "The world's largest decentralized storage network. An open market for storing data reliably and cheaply.",
     fullDescription: `## Overview
 
-Sui Webhooks provides real-time notifications for on-chain activity, delivering events to your HTTP endpoints as they happen.
+Filecoin is a peer-to-peer network that stores files, with built-in economic incentives to ensure files are stored reliably over time.
 
-### Trigger Types
+### Features
 
-- **Address activity**: Transactions to/from addresses
-- **Contract events**: Specific Move events
-- **Object changes**: Object creation/mutation/deletion
-- **Coin transfers**: Token transfers
-
-### Webhook Payload
-
-\`\`\`json
-{
-  "type": "transaction",
-  "digest": "...",
-  "timestamp": 1699999999,
-  "sender": "0x...",
-  "effects": { ... }
-}
-\`\`\`
-
-### Reliability
-
-- Automatic retries (3x)
-- Dead letter queue
-- Webhook logs & debugging
+- **Verifiable Storage**: Cryptographic proofs ensure your data is safe.
+- **Massive Scale**: Exabytes of capacity available.
+- **Sui Archival**: Ideal for long-term blockchain history storage.
 `,
-    price_ms: 350_000,
-    provider: "HookStream",
-    category: "Indexer",
-    tags: ["trending"],
-    is_verified: false,
-    rateLimit: "500 webhooks",
-    tokensAccepted: ["SUI", "USDC"],
-    docsUrl: "https://docs.hookstream.io",
-    acceptingNewUsers: false,
+    price_ms: 200_000,
+    provider: "Protocol Labs",
+    logo: "https://cryptologos.cc/logos/filecoin-fil-logo.png",
+    category: "Storage",
+    tags: ["archival", "decentralized"],
+    is_verified: true,
+    sla: "99.9%",
+    tokensAccepted: ["FIL"],
+    docsUrl: "https://filecoin.io/",
+    acceptingNewUsers: true,
+    pricingTiers: [
+      {
+        name: "Storage Deal",
+        price: "Market Rate",
+        requests: "Per Deal",
+        features: ["Cold Storage", "Retrievability"],
+      },
+    ],
+  },
+  {
+    id: "storj-io",
+    name: "Storj",
+    description:
+      "Fast, secure, and S3-compatible decentralized cloud object storage. Encrypted by default.",
+    fullDescription: `## Overview
+
+Storj DCS (Decentralized Cloud Storage) encrypts, shards, and distributes data across nodes around the world. It is S3 compatible, making it easy to switch from AWS.
+
+### Features
+
+- **S3 Compatible**: Works with existing tools like MinIO or AWS CLI.
+- **End-to-End Encryption**: Only you hold the keys.
+- **High Speed**: Downloads segments in parallel from multiple nodes.
+`,
+    price_ms: 220_000,
+    provider: "Storj",
+    logo: "https://assets.coingecko.com/coins/images/949/large/storj.png",
+    category: "Storage",
+    tags: ["s3", "fast", "secure"],
+    is_verified: true,
+    sla: "99.95%",
+    tokensAccepted: ["STORJ", "USDC"],
+    docsUrl: "https://www.storj.io/",
+    acceptingNewUsers: true,
+    pricingTiers: [
+      {
+        name: "Free Tier",
+        price: "Free",
+        requests: "25GB Storage",
+        features: ["25GB Bandwidth", "S3 Access"],
+      },
+      {
+        name: "Pro",
+        price: "$4/TB",
+        requests: "Monthly",
+        features: ["Unlimited Scaling", "Priority Support"],
+      },
+    ],
   },
 ];

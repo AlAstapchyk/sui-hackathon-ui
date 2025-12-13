@@ -3,6 +3,7 @@
 import { ArrowRightIcon } from '@heroicons/react/24/solid';
 import { CheckBadgeIcon, ClockIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ServiceData } from '@/app/data/services';
 
 export type Service = ServiceData;
@@ -14,8 +15,10 @@ interface ServiceCardProps {
 function formatPrice(priceMs: number, pricingTiers?: Service['pricingTiers']): string {
     if (pricingTiers && pricingTiers.length > 0) {
         const firstTier = pricingTiers[0];
-        if (firstTier.price === 'Free') return 'Free';
-        return firstTier.price;
+        if (firstTier.price.toLowerCase() === 'free') return 'Free';
+        if (/\d/.test(firstTier.price)) {
+            return firstTier.price;
+        }
     }
 
     const monthlyPrice = priceMs / 1_000_000;
@@ -50,22 +53,32 @@ export default function ServiceCard({ service }: ServiceCardProps) {
                 )}
 
                 <div className="p-6 pt-14">
-                    <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-cyan-400 transition-colors line-clamp-1">
-                        {service.name}
-                    </h3>
-
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-400 to-teal-500 flex items-center justify-center text-white text-xs font-bold">
-                            {service.provider.charAt(0)}
+                    <div className="flex items-start gap-4 mb-4">
+                        {service.logo && (
+                            <div className="relative shrink-0">
+                                <Image
+                                    src={service.logo}
+                                    alt={`${service.name} logo`}
+                                    width={48}
+                                    height={48}
+                                    className="w-12 h-12 object-cover transition-all"
+                                    unoptimized
+                                />
+                            </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-semibold text-white group-hover:text-cyan-400 transition-colors line-clamp-1">
+                                {service.name}
+                            </h3>
+                            <span className="text-sm text-slate-400">by {service.provider}</span>
                         </div>
-                        <span className="text-sm text-slate-400">by {service.provider}</span>
                     </div>
 
                     <p className="text-sm text-slate-400 line-clamp-2 mb-4 min-h-[40px]">
                         {service.description}
                     </p>
 
-                    <div className="flex flex-wrap gap-2">
+                    {/* <div className="flex flex-wrap gap-2">
                         {service.sla && (
                             <span className="text-xs px-2 py-1 bg-slate-700/50 text-slate-300 rounded">
                                 SLA: {service.sla}
@@ -81,14 +94,14 @@ export default function ServiceCard({ service }: ServiceCardProps) {
                                 {service.tokensAccepted.join(', ')}
                             </span>
                         )}
-                    </div>
+                    </div> */}
                 </div>
 
                 <div className="px-6 py-4 border-t border-slate-700/50 bg-slate-900/30 flex items-center justify-between">
                     <div>
                         <p className="text-xs text-slate-500">Starting at</p>
                         <p className="text-lg font-bold text-white">
-                            {displayPrice} <span className="text-sm font-normal text-slate-400">/month</span>
+                            {displayPrice}{displayPrice !== 'Free' && <span className="text-sm font-normal text-slate-400"> /month</span>}
                         </p>
                     </div>
 

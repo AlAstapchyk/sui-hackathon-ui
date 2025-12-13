@@ -3,8 +3,8 @@ import {
     CheckBadgeIcon,
     CheckCircleIcon,
     XCircleIcon,
-    MapPinIcon,
 } from '@heroicons/react/24/outline';
+import Image from 'next/image';
 
 interface ServiceHeaderProps {
     service: ServiceData;
@@ -17,11 +17,18 @@ export default function ServiceHeader({ service }: ServiceHeaderProps) {
                 {service.category}
             </span>
 
-            <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-400 to-teal-500 flex items-center justify-center text-white text-2xl font-bold">
-                        {service.provider.charAt(0)}
-                    </div>
+            <div className="flex items-start justify-between">
+                <div className="flex items-end gap-4">
+                    {service.logo && (
+                        <Image
+                            src={service.logo}
+                            alt={`${service.name} logo`}
+                            width={64}
+                            height={64}
+                            className="w-16 h-16 object-cover"
+                            unoptimized
+                        />
+                    )}
                     <div>
                         <div className="flex items-center gap-2 mb-2">
                             {service.acceptingNewUsers !== false ? (
@@ -49,7 +56,7 @@ export default function ServiceHeader({ service }: ServiceHeaderProps) {
                 )}
             </div>
 
-            <div className="flex flex-wrap gap-3 mb-6">
+            {/* <div className="flex flex-wrap gap-3 mb-6">
                 {service.sla && (
                     <span className="px-3 py-1.5 bg-slate-700/50 text-slate-300 rounded-lg text-sm">
                         SLA: {service.sla}
@@ -77,7 +84,7 @@ export default function ServiceHeader({ service }: ServiceHeaderProps) {
                     <MapPinIcon className="w-4 h-4" />
                     <span>Regions: {service.regions.join(', ')}</span>
                 </div>
-            )}
+            )} */}
         </div>
     );
 }

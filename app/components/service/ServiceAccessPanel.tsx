@@ -268,12 +268,6 @@ export default function ServiceAccessPanel({ service }: ServiceAccessPanelProps)
                             Subscribe Now
                         </button>
                     )}
-                    <button
-                        onClick={handleTestAccess}
-                        className="w-full py-3 rounded-xl bg-slate-700 text-white font-medium border border-slate-600 hover:bg-slate-600 transition-all cursor-pointer"
-                    >
-                        Test Access (Proxy)
-                    </button>
                 </div>
 
                 <p className="text-xs text-slate-500 text-center mt-4">
