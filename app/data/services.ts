@@ -17,12 +17,19 @@ export interface ServiceData {
   endpoint?: string;
   docsUrl?: string;
   supportUrl?: string;
-  // Pricing tiers
+  // Monthly subscription tiers
   pricingTiers?: {
     name: string;
     price: string;
     requests: string;
     features: string[];
+  }[];
+  // Request packages (pay-per-use) - can be used alongside or instead of monthly tiers
+  requestPackages?: {
+    name: string;
+    requests: number;
+    price: string; // e.g., "0.001 SUI"
+    pricePerRequest?: string; // e.g., "0.00001 SUI/req"
   }[];
   // Provider status
   acceptingNewUsers?: boolean;
@@ -33,6 +40,124 @@ export interface ServiceData {
 }
 
 export const SERVICES: ServiceData[] = [
+  {
+    id: "blockberry-api",
+    name: "Blockberry API",
+    description:
+      "Open API platform providing extensive indexed blockchain data for Sui - accounts, transactions, DeFi, NFTs, validators, and more.",
+    fullDescription: `
+Blockberry is an open API platform providing an extensive set of indexed blockchain data that allows developers to build Web-3 applications: DeFis, DEXs, block explorers, supply management platforms, and more.
+
+### What Data We Provide
+
+Apart from general blockchain data like accounts, transactions, validators, coins, and events - we have indexed:
+
+- **Metadata**: Token and coin metadata
+- **NFTs & Collections**: Full NFT data with attributes
+- **DeFi & DEX**: Protocol TVL, trading activity
+- **Validators**: APY, stake, commission data
+- **Charts & Analytics**: Historical data visualization
+
+### API Endpoints
+
+- \`/accounts\` - Account balances, activity, objects
+- \`/transactions\` - Transaction history and details
+- \`/validators\` - Validator info, APY, delegations
+- \`/defi\` - DeFi protocol data and TVL
+- \`/nfts\` - NFT collections and metadata
+- \`/coins\` - Coin info and market data
+
+### Example Request
+
+\`\`\`bash
+curl --request POST \\
+  --url 'https://api.blockberry.one/sui/v1/defi?page=0&size=20&orderBy=DESC&sortBy=CURRENT_TVL' \\
+  --header 'accept: */*' \\
+  --header 'content-type: application/json' \\
+  --header 'x-api-key: YOUR_API_KEY' \\
+  --data '{"categories":"DEX"}'
+\`\`\`
+
+### Response Example
+
+\`\`\`json
+{
+  "content": [
+    {
+      "name": "Cetus",
+      "category": "DEX",
+      "currentTvl": 125000000,
+      "volume24h": 5000000
+    }
+  ],
+  "totalElements": 42
+}
+\`\`\`
+
+### Supported Chains
+
+- **Sui Mainnet** - Full indexing
+- **Walrus Mainnet** - Storage data
+- **Iota Mainnet/Testnet** - Full indexing
+- **Mina Mainnet/Devnet** - Full indexing
+`,
+    price_ms: 500_000,
+    provider: "Blockberry",
+    providerAvatar: "https://docs.blockberry.one/favicon.ico",
+    category: "Indexer",
+    tags: ["trending", "top-seller"],
+    is_verified: true,
+    sla: "99.9%",
+    rateLimit: "10K req/min",
+    tokensAccepted: ["SUI", "USDC"],
+    endpoint: "https://api.blockberry.one/sui/v1",
+    docsUrl: "https://docs.blockberry.one/reference/welcome-to-blockberry-api",
+    supportUrl: "https://docs.blockberry.one/reference/error-reference",
+    acceptingNewUsers: true,
+    latency: "<100ms",
+    regions: ["Global"],
+    uptime: "99.9%",
+    pricingTiers: [
+      {
+        name: "Free",
+        price: "Free",
+        requests: "10 requests",
+        features: ["Basic endpoints", "Community support"],
+      },
+      {
+        name: "Pro",
+        price: "0.0005 SUI/s",
+        requests: "1K/day",
+        features: ["All endpoints", "DeFi data", "Priority support"],
+      },
+      {
+        name: "Enterprise",
+        price: "Custom",
+        requests: "Unlimited",
+        features: ["Dedicated support", "Custom indexing", "SLA guarantee"],
+      },
+    ],
+    requestPackages: [
+      {
+        name: "Starter Pack",
+        requests: 100,
+        price: "0.5 SUI",
+        pricePerRequest: "0.005 SUI/req",
+      },
+      {
+        name: "Growth Pack",
+        requests: 1000,
+        price: "4 SUI",
+        pricePerRequest: "0.004 SUI/req",
+      },
+      {
+        name: "Scale Pack",
+        requests: 10000,
+        price: "30 SUI",
+        pricePerRequest: "0.003 SUI/req",
+      },
+    ],
+  },
   {
     id: "0x268060691fbe57a86e16d41a8ba0a277441a7566beb9ddb2774430d68ef4a912",
     name: "SuiNode Pro RPC",

@@ -13,7 +13,10 @@ export default function Navbar() {
 
 
     const isActive = (path: string) => {
-        if (path === '/') return pathname === '/' && !pathname.startsWith('/dashboard') && !pathname.startsWith('/provider');
+        if (path === '/') {
+            // Explore is active for home page and service detail pages
+            return pathname === '/' || pathname.startsWith('/service');
+        }
         return pathname.startsWith(path);
     };
 
@@ -41,6 +44,9 @@ export default function Navbar() {
         [&_button]:!transition-all 
         [&_button]:!duration-200
         [&_button]:!cursor-pointer
+        [&_button_svg]:!text-white
+        [&_button_svg]:!stroke-white
+        [&_button_svg_path]:!stroke-white
     `;
 
     const mobileWalletButtonStyles = `

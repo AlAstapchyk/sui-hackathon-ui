@@ -15,8 +15,9 @@ interface AnimatedDropdownProps {
     onChange: (value: string | null) => void;
     placeholder: string;
     icon?: ReactNode;
-    activeColor?: 'cyan' | 'purple' | 'emerald';
+    activeColor?: 'cyan' | 'purple' | 'emerald' | 'neutral';
     allOptionId?: string;
+    fullWidth?: boolean;
 }
 
 const colorClasses = {
@@ -32,6 +33,10 @@ const colorClasses = {
         active: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
         option: 'bg-emerald-500/20 text-emerald-400',
     },
+    neutral: {
+        active: 'bg-slate-700/50 text-white border-slate-600',
+        option: 'bg-slate-700/50 text-white',
+    },
 };
 
 export default function AnimatedDropdown({
@@ -42,6 +47,7 @@ export default function AnimatedDropdown({
     icon,
     activeColor = 'cyan',
     allOptionId = 'all',
+    fullWidth = false,
 }: AnimatedDropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
@@ -61,11 +67,12 @@ export default function AnimatedDropdown({
     const colors = colorClasses[activeColor];
 
     return (
-        <div ref={ref} className="relative">
+        <div ref={ref} className={`relative ${fullWidth ? 'w-full' : ''}`}>
             <motion.button
+                type="button"
                 onClick={() => setIsOpen(!isOpen)}
                 whileTap={{ scale: 0.98 }}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer ${isActive
+                className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors cursor-pointer ${fullWidth ? 'w-full' : ''} ${isActive
                     ? `${colors.active} border`
                     : 'bg-slate-800/80 text-slate-300 border border-slate-700 hover:border-slate-600'
                     }`}
@@ -93,6 +100,7 @@ export default function AnimatedDropdown({
                             const isSelected = (option.id === allOptionId && !value) || option.id === value;
                             return (
                                 <motion.button
+                                    type="button"
                                     key={option.id}
                                     initial={{ opacity: 0, x: -8 }}
                                     animate={{ opacity: 1, x: 0 }}
