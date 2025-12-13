@@ -4,12 +4,12 @@ import { useState } from 'react';
 import {
     useCurrentAccount,
     useSignAndExecuteTransaction,
-    useSignPersonalMessage,
 } from "@mysten/dapp-kit";
 import { Transaction } from '@mysten/sui/transactions';
 import { ServiceData } from '@/app/data/services';
-import { CheckCircleIcon } from '@heroicons/react/24/outline';
-import { PACKAGE_ID } from '@/app/constants';
+import { CheckCircleIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
+import { PACKAGE_ID, REGISTRY_ID } from '@/app/constants';
+import { useUserSubscription, formatSubscriptionAmount } from '@/app/hooks/useSubscription';
 
 interface ServiceAccessPanelProps {
     service: ServiceData;
@@ -19,32 +19,59 @@ export default function ServiceAccessPanel({ service }: ServiceAccessPanelProps)
     const [selectedTier, setSelectedTier] = useState(0);
     const [selectedPackage, setSelectedPackage] = useState(0);
     const [pricingType, setPricingType] = useState<'free' | 'perRequest' | 'bundle' | 'enterprise'>('free');
+    const [isLoading, setIsLoading] = useState(false);
 
     const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
-    const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
     const account = useCurrentAccount();
 
-    const handlePurchase = () => {
+    const { data: subscription, isLoading: subLoading, refetch: refetchSubscription } = useUserSubscription(1);
+
+    const calculatePriceInMist = (): number | null => {
+        if (pricingType === 'free') {
+            return 0;
+        }
+
+        if (pricingType === 'enterprise') {
+            return null;
+        }
+
+        if (pricingType === 'perRequest' && service.requestPackages?.[selectedPackage]) {
+            const pkg = service.requestPackages[selectedPackage];
+            const priceMatch = pkg.price.match(/[\d.]+/);
+            if (priceMatch) {
+                return parseFloat(priceMatch[0]) * 1_000_000_000;
+            }
+        }
+
+        if (pricingType === 'bundle' && service.pricingTiers) {
+            const bundleTiers = service.pricingTiers.filter(t => t.price !== 'Free' && t.price !== 'Custom');
+            const tier = bundleTiers[selectedTier];
+            if (tier) {
+                const priceMatch = tier.price.match(/[\d.]+/);
+                if (priceMatch) {
+                    return parseFloat(priceMatch[0]) * 1_000_000_000;
+                }
+            }
+        }
+
+        return service.price_ms;
+    };
+
+    const handlePurchase = async () => {
         if (!account) {
             alert("Please connect your wallet first!");
             return;
         }
 
-        let priceInMist: number;
-        if (service.pricingTiers && service.pricingTiers[selectedTier]) {
-            const tierPrice = service.pricingTiers[selectedTier].price;
-            if (tierPrice === 'Free') {
-                priceInMist = 0;
-            } else if (tierPrice === 'Custom') {
-                alert("Please contact the provider for Enterprise pricing");
-                return;
-            } else {
-                const match = tierPrice.match(/[\d.]+/);
-                const numericValue = match ? parseFloat(match[0]) : 0;
-                priceInMist = numericValue * 1_000_000_000;
-            }
-        } else {
-            priceInMist = service.price_ms;
+        if (pricingType === 'enterprise') {
+            alert("Please contact the provider for Enterprise pricing");
+            return;
+        }
+
+        const priceInMist = calculatePriceInMist();
+        if (priceInMist === null) {
+            alert("Unable to calculate price");
+            return;
         }
 
         if (priceInMist === 0) {
@@ -52,72 +79,79 @@ export default function ServiceAccessPanel({ service }: ServiceAccessPanelProps)
             return;
         }
 
-        const tx = new Transaction();
-        const [coin] = tx.splitCoins(tx.gas, [priceInMist]);
-
-        tx.moveCall({
-            target: `${PACKAGE_ID}::service_platform::purchase_subscription`,
-            arguments: [
-                tx.object(service.id),
-                coin,
-                tx.object('0x6'),
-            ],
-        });
-
-        signAndExecuteTransaction(
-            { transaction: tx },
-            {
-                onSuccess: (result) => {
-                    alert(`✅ Subscription activated! Digest: ${result.digest}`);
-                },
-                onError: (error) => {
-                    console.error(error);
-                    alert(`❌ Error: ${error.message}`);
-                }
-            }
-        );
-    };
-
-    const handleTestAccess = async () => {
-        if (!account) {
-            alert("Please connect your wallet first");
-            return;
-        }
+        setIsLoading(true);
 
         try {
-            const timestamp = Date.now().toString();
-            const msg = `Login to InfraProxy at ${timestamp}`;
-            const msgBytes = new TextEncoder().encode(msg);
+            const tx = new Transaction();
+            const [paymentCoin] = tx.splitCoins(tx.gas, [priceInMist]);
 
-            const { signature } = await signPersonalMessage({
-                message: msgBytes,
+            tx.moveCall({
+                target: `${PACKAGE_ID}::challenge::subscribe`,
+                arguments: [
+                    tx.object(REGISTRY_ID),
+                    tx.pure.u64(1),
+                    paymentCoin,
+                ],
             });
 
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-            const res = await fetch(`${apiUrl}/api/data?user=${account.address}&service_id=${service.id}`, {
-                headers: {
-                    "x-sui-signature": signature,
-                    "x-sui-timestamp": timestamp,
-                },
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                alert(`✅ Access Granted!\nMsg: ${data.message}\nSub ID: ${data.subscription}`);
-            } else {
-                alert(`❌ Access Denied: ${data.error}`);
-            }
+            await signAndExecuteTransaction(
+                { transaction: tx },
+                {
+                    onSuccess: (result) => {
+                        alert(`✅ Subscription activated! Digest: ${result.digest}`);
+                        setIsLoading(false);
+                        refetchSubscription();
+                    },
+                    onError: (error) => {
+                        console.error(error);
+                        alert(`❌ Error: ${error.message}`);
+                        setIsLoading(false);
+                    }
+                }
+            );
         } catch (error: any) {
             console.error(error);
-            alert(`Error: ${error.message}`);
+            alert(`❌ Error: ${error.message}`);
+            setIsLoading(false);
         }
     };
+
+    const hasActiveSubscription = subscription && subscription.amount > 0;
 
     return (
         <div className="sticky top-24 space-y-4">
+            {subLoading ? (
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6 animate-pulse">
+                    <div className="h-4 bg-slate-700 rounded w-1/2 mb-2"></div>
+                    <div className="h-6 bg-slate-700 rounded w-3/4"></div>
+                </div>
+            ) : hasActiveSubscription ? (
+                <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-2xl p-6">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/30 flex items-center justify-center">
+                            <CheckCircleIcon className="w-5 h-5 text-emerald-400" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-bold text-emerald-400">Active Subscription</h3>
+                            <p className="text-sm text-slate-400">Service ID: {subscription.serviceId}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                        <CurrencyDollarIcon className="w-4 h-4 text-emerald-400" />
+                        <span className="text-emerald-300 font-medium">
+                            Balance: {formatSubscriptionAmount(subscription.amount)}
+                        </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-2">
+                        Credits available for API requests
+                    </p>
+                </div>
+            ) : null}
+
             <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-6">
-                <h3 className="text-lg font-bold text-white mb-4">Get Access</h3>
+                <h3 className="text-lg font-bold text-white mb-4">
+                    {hasActiveSubscription ? 'Top Up Balance' : 'Get Access'}
+                </h3>
 
                 <div className="flex gap-1 bg-slate-900/50 rounded-lg p-1 mb-4">
                     <button
@@ -242,30 +276,34 @@ export default function ServiceAccessPanel({ service }: ServiceAccessPanelProps)
                     {pricingType === 'free' ? (
                         <button
                             onClick={handlePurchase}
-                            className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:opacity-90 transition-all shadow-lg shadow-emerald-500/25 cursor-pointer"
+                            disabled={isLoading}
+                            className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:opacity-90 transition-all shadow-lg shadow-emerald-500/25 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Start Free Tier
+                            {isLoading ? 'Processing...' : 'Start Free Tier'}
                         </button>
                     ) : pricingType === 'perRequest' ? (
                         <button
                             onClick={handlePurchase}
-                            className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-all shadow-lg shadow-purple-500/25 cursor-pointer"
+                            disabled={isLoading}
+                            className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition-all shadow-lg shadow-purple-500/25 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Buy Requests
+                            {isLoading ? 'Processing...' : 'Buy Requests'}
                         </button>
                     ) : pricingType === 'enterprise' ? (
                         <button
                             onClick={handlePurchase}
-                            className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:opacity-90 transition-all shadow-lg shadow-amber-500/25 cursor-pointer"
+                            disabled={isLoading}
+                            className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold hover:opacity-90 transition-all shadow-lg shadow-amber-500/25 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Contact Sales
+                            {isLoading ? 'Processing...' : 'Contact Sales'}
                         </button>
                     ) : (
                         <button
                             onClick={handlePurchase}
-                            className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-semibold hover:opacity-90 transition-all shadow-lg shadow-cyan-500/25 cursor-pointer"
+                            disabled={isLoading}
+                            className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 text-white font-semibold hover:opacity-90 transition-all shadow-lg shadow-cyan-500/25 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Subscribe Now
+                            {isLoading ? 'Processing...' : 'Subscribe Now'}
                         </button>
                     )}
                 </div>

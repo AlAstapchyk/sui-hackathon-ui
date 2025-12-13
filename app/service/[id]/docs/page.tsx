@@ -10,9 +10,7 @@ export default async function ServiceDocsPage({ params }: ServiceDocsPageProps) 
     const { id } = await params;
     const service = getService(id);
 
-    if (!service) {
-        notFound();
-    }
+    if (!service) notFound();
 
     return <ServiceDocsContent service={service} />;
 }

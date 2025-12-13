@@ -11,7 +11,6 @@ import {
     PlusIcon,
     TrashIcon,
 } from '@heroicons/react/24/outline';
-import { PACKAGE_ID } from '@/app/constants';
 import AnimatedDropdown from '@/app/components/explore/AnimatedDropdown';
 
 const categories = [
@@ -64,32 +63,6 @@ export default function CreateServicePage() {
         setLoading(true);
 
         const tx = new Transaction();
-        const rate = Number(formData.price) * 1_000_000;
-
-        tx.moveCall({
-            target: `${PACKAGE_ID}::service_platform::create_service`,
-            arguments: [
-                tx.pure.string(formData.name),
-                tx.pure.u64(rate),
-                tx.pure.string(formData.description),
-            ],
-        });
-
-        signAndExecuteTransaction(
-            { transaction: tx },
-            {
-                onSuccess: (result) => {
-                    setLoading(false);
-                    alert(`✅ Service Created! Digest: ${result.digest}`);
-                    router.push('/provider');
-                },
-                onError: (error) => {
-                    setLoading(false);
-                    console.error(error);
-                    alert(`❌ Error: ${error.message}`);
-                },
-            }
-        );
     };
 
     const handleTokenToggle = (token: string) => {

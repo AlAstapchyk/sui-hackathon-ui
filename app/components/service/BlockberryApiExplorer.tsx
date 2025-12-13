@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useCurrentAccount, useSignPersonalMessage } from '@mysten/dapp-kit';
 import AnimatedDropdown from '@/app/components/explore/AnimatedDropdown';
 import {
     CheckIcon,
@@ -48,6 +49,11 @@ const ENDPOINT_OPTIONS = [
 
 type CodeLanguage = 'shell' | 'nodejs' | 'python';
 
+interface SignatureCache {
+    message: string;
+    signature: string;
+}
+
 export default function BlockberryApiExplorer() {
     const [copied, setCopied] = useState<string | null>(null);
     const [apiKey] = useState('G2csRFbbmwSKHir3JH5wQRNFHWM0Ti');
@@ -63,6 +69,10 @@ export default function BlockberryApiExplorer() {
     const [error, setError] = useState<string | null>(null);
     const [codeLanguage, setCodeLanguage] = useState<CodeLanguage>('shell');
     const [isExpanded, setIsExpanded] = useState(false);
+    const [signatureCache, setSignatureCache] = useState<SignatureCache | null>(null);
+
+    const account = useCurrentAccount();
+    const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
 
     const copyToClipboard = (text: string, id: string) => {
         navigator.clipboard.writeText(text);
@@ -76,53 +86,85 @@ export default function BlockberryApiExplorer() {
 
         return {
             shell: `curl --request POST \\
-            --url '${baseUrl}' \\
-            --header 'accept: */*' \\
-            --header 'content-type: application/json' \\
-            --header 'x-api-key: YOUR_API_KEY' \\
-            --data '${bodyData}'`,
+                    --url '${baseUrl}' \\
+                    --header 'accept: */*' \\
+                    --header 'content-type: application/json' \\
+                    --header 'x-api-key: YOUR_API_KEY' \\
+                    --data '${bodyData}'`,
             nodejs: `const axios = require('axios');
 
-            const response = await axios.post(
-            '${baseUrl}',
-            { categories: ['${category}'] },
-            {
-                headers: {
-                'accept': '*/*',
-                'content-type': 'application/json',
-                'x-api-key': 'YOUR_API_KEY'
-                }
-            }
-            );
+                    const response = await axios.post(
+                    '${baseUrl}',
+                    { categories: ['${category}'] },
+                    {
+                        headers: {
+                        'accept': '*/*',
+                        'content-type': 'application/json',
+                        'x-api-key': 'YOUR_API_KEY'
+                        }
+                    }
+                    );
 
-            console.log(response.data);`,
+                    console.log(response.data);`,
             python: `import requests
 
-            response = requests.post(
-                '${baseUrl}',
-                json={'categories': ['${category}']},
-                headers={
-                    'accept': '*/*',
-                    'content-type': 'application/json',
-                    'x-api-key': 'YOUR_API_KEY'
-                }
-            )
+                    response = requests.post(
+                        '${baseUrl}',
+                        json={'categories': ['${category}']},
+                        headers={
+                            'accept': '*/*',
+                            'content-type': 'application/json',
+                            'x-api-key': 'YOUR_API_KEY'
+                        }
+                    )
 
-            print(response.json())`
+                    print(response.json())`
         };
     }, [category, page, size, orderBy, sortBy, selectedEndpoint]);
 
     const handleTryIt = async () => {
+        if (!account) {
+            setError('Please connect your wallet first');
+            return;
+        }
+
         setLoading(true);
         setError(null);
         setResponse(null);
         setResponseStatus(null);
+
         try {
+            const message = JSON.stringify({
+                method: 'POST',
+                url: `${selectedEndpoint.path}?page=${page}&size=${size}&orderBy=${orderBy}&sortBy=${sortBy}`,
+                data: { categories: category },
+            });
+
+            let signature: string;
+
+            if (signatureCache && signatureCache.message === message) {
+                console.log('Using cached signature');
+                signature = signatureCache.signature;
+            } else {
+                console.log('Requesting new signature for:', message);
+                const result = await signPersonalMessage({
+                    message: new TextEncoder().encode(message),
+                });
+                signature = result.signature;
+                setSignatureCache({ message, signature });
+            }
+
+            console.log("Message: ", message, "Signature: ", signature, "Address: ", account.address);
+
             const res = await fetch(
                 `https://api.blockberry.one/sui/v1${selectedEndpoint.path}?page=${page}&size=${size}&orderBy=${orderBy}&sortBy=${sortBy}`,
                 {
                     method: 'POST',
-                    headers: { 'accept': '*/*', 'content-type': 'application/json', 'x-api-key': apiKey },
+                    headers: {
+                        'accept': '*/*',
+                        'content-type': 'application/json',
+                        'x-api-key': apiKey,
+                    },
                     body: JSON.stringify({ categories: [category] }),
                 }
             );
