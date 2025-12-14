@@ -1,10 +1,12 @@
-import { SERVICES } from './data/services';
+import { getAllServices } from './lib/service-utils';
 import HeroSection from './components/explore/HeroSection';
 import ServiceExplorer from './components/explore/ServiceExplorer';
 import { Service } from './components/explore/ServiceCard';
 
-export default function Home() {
-  const services: Service[] = SERVICES.map(s => ({
+export default async function Home() {
+  const allServices = await getAllServices();
+
+  const services: Service[] = allServices.map(s => ({
     ...s,
     category: s.category || 'General',
   }));
@@ -19,4 +21,3 @@ export default function Home() {
     </div>
   );
 }
-

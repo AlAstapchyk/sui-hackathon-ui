@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getService } from '@/app/lib/service-utils';
+import { getServiceById } from '@/app/lib/service-utils';
 import ServiceFeatures from '@/app/components/service/ServiceFeatures';
 import ServiceDescription from '@/app/components/service/ServiceDescription';
 
@@ -9,7 +9,7 @@ interface ServicePageProps {
 
 export default async function ServicePage({ params }: ServicePageProps) {
     const { id } = await params;
-    const service = getService(id);
+    const service = await getServiceById(id);
 
     if (!service) {
         notFound();

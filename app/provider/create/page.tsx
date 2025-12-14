@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCurrentAccount, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
-import { Transaction } from '@mysten/sui/transactions';
+import { useCurrentAccount } from '@mysten/dapp-kit';
 import {
     ArrowLeftIcon,
     InformationCircleIcon,
@@ -27,32 +26,66 @@ const categories = [
 export default function CreateServicePage() {
     const router = useRouter();
     const account = useCurrentAccount();
-    const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
     const [formData, setFormData] = useState({
         name: '',
         description: '',
         fullDescription: '',
+        logo: '',
         category: 'RPC',
+        tags: [] as string[],
         price: '',
         rateLimit: '',
+        latency: '<100ms',
+        uptime: '99.9%',
         tokensAccepted: ['SUI'],
         endpoint: '',
         docsUrl: '',
         supportUrl: '',
         // Verification
         requestVerification: false,
-        // Pricing
-        pricingTiers: [
-            { name: 'Free', price: '0', requests: '100', features: ['Basic support'] }
-        ],
+        // Service Features (displayed on Overview)
+        features: [] as { icon: string; title: string; description: string }[],
+        // Free Tier
+        freeTier: {
+            enabled: false,
+            name: 'Free Tier',
+            requests: '100',
+            features: ['Basic endpoints', 'Community support'],
+            isForever: true,
+        },
+        // Pricing Tiers (Subscriptions)
+        pricingTiers: [] as { name: string; price: string; requests: string; features: string[]; type: string; period: string }[],
+        // Request Packages (One-time)
         requestPackages: [
             { requests: '1000', price: '1' }
         ],
+        // Enterprise Tier
+        enterpriseTier: {
+            enabled: false,
+            name: 'Enterprise',
+            features: ['Dedicated support', 'Custom indexing', 'SLA guarantee'],
+            contactLabel: 'Contact Sales',
+        },
+        // API Explorer
+        apiExplorer: {
+            baseUrl: '',
+            authHeader: 'x-api-key',
+            endpoints: [] as {
+                id: string;
+                name: string;
+                method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+                path: string;
+                description: string;
+                queryParams: { name: string; type: 'string' | 'number' | 'select'; default?: string; options?: { id: string; label: string }[] }[];
+                bodyParams: { name: string; type: 'string' | 'number' | 'select'; options?: { id: string; label: string }[] }[];
+            }[],
+        },
     });
     const [loading, setLoading] = useState(false);
+    const [expandedEndpoint, setExpandedEndpoint] = useState<string | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!account) {
@@ -62,7 +95,47 @@ export default function CreateServicePage() {
 
         setLoading(true);
 
-        const tx = new Transaction();
+        try {
+            // Transform data - only include enabled tiers
+            const submitData = {
+                ...formData,
+                freeTier: formData.freeTier.enabled ? {
+                    name: formData.freeTier.name,
+                    requests: formData.freeTier.requests,
+                    features: formData.freeTier.features,
+                    isForever: formData.freeTier.isForever,
+                } : undefined,
+                enterpriseTier: formData.enterpriseTier.enabled ? {
+                    name: formData.enterpriseTier.name,
+                    features: formData.enterpriseTier.features,
+                    contactLabel: formData.enterpriseTier.contactLabel,
+                } : undefined,
+                provider: account.address.slice(0, 8) + '...',
+                providerAddress: account.address,
+            };
+
+            const response = await fetch('/api/services', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(submitData),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to create service');
+            }
+
+            alert('Service created successfully!');
+            router.push('/provider');
+        } catch (error: any) {
+            console.error('Error creating service:', error);
+            alert(error.message || 'Failed to create service');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleTokenToggle = (token: string) => {
@@ -120,6 +193,141 @@ export default function CreateServicePage() {
         }));
     };
 
+    // API Explorer management
+    const addEndpoint = () => {
+        setFormData(prev => ({
+            ...prev,
+            apiExplorer: {
+                ...prev.apiExplorer,
+                endpoints: [...prev.apiExplorer.endpoints, {
+                    id: `endpoint-${Date.now()}`,
+                    name: '',
+                    method: 'GET' as const,
+                    path: '',
+                    description: '',
+                    queryParams: [],
+                    bodyParams: [],
+                }]
+            }
+        }));
+    };
+
+    const removeEndpoint = (endpointId: string) => {
+        setFormData(prev => ({
+            ...prev,
+            apiExplorer: {
+                ...prev.apiExplorer,
+                endpoints: prev.apiExplorer.endpoints.filter(ep => ep.id !== endpointId)
+            }
+        }));
+    };
+
+    const updateEndpoint = (endpointId: string, field: string, value: any) => {
+        setFormData(prev => ({
+            ...prev,
+            apiExplorer: {
+                ...prev.apiExplorer,
+                endpoints: prev.apiExplorer.endpoints.map(ep =>
+                    ep.id === endpointId ? { ...ep, [field]: value } : ep
+                )
+            }
+        }));
+    };
+
+    const addQueryParam = (endpointId: string) => {
+        setFormData(prev => ({
+            ...prev,
+            apiExplorer: {
+                ...prev.apiExplorer,
+                endpoints: prev.apiExplorer.endpoints.map(ep =>
+                    ep.id === endpointId ? {
+                        ...ep,
+                        queryParams: [...ep.queryParams, { name: '', type: 'string' as const }]
+                    } : ep
+                )
+            }
+        }));
+    };
+
+    const removeQueryParam = (endpointId: string, paramIndex: number) => {
+        setFormData(prev => ({
+            ...prev,
+            apiExplorer: {
+                ...prev.apiExplorer,
+                endpoints: prev.apiExplorer.endpoints.map(ep =>
+                    ep.id === endpointId ? {
+                        ...ep,
+                        queryParams: ep.queryParams.filter((_, i) => i !== paramIndex)
+                    } : ep
+                )
+            }
+        }));
+    };
+
+    const updateQueryParam = (endpointId: string, paramIndex: number, field: string, value: any) => {
+        setFormData(prev => ({
+            ...prev,
+            apiExplorer: {
+                ...prev.apiExplorer,
+                endpoints: prev.apiExplorer.endpoints.map(ep =>
+                    ep.id === endpointId ? {
+                        ...ep,
+                        queryParams: ep.queryParams.map((p, i) =>
+                            i === paramIndex ? { ...p, [field]: value } : p
+                        )
+                    } : ep
+                )
+            }
+        }));
+    };
+
+    const addBodyParam = (endpointId: string) => {
+        setFormData(prev => ({
+            ...prev,
+            apiExplorer: {
+                ...prev.apiExplorer,
+                endpoints: prev.apiExplorer.endpoints.map(ep =>
+                    ep.id === endpointId ? {
+                        ...ep,
+                        bodyParams: [...ep.bodyParams, { name: '', type: 'string' as const }]
+                    } : ep
+                )
+            }
+        }));
+    };
+
+    const removeBodyParam = (endpointId: string, paramIndex: number) => {
+        setFormData(prev => ({
+            ...prev,
+            apiExplorer: {
+                ...prev.apiExplorer,
+                endpoints: prev.apiExplorer.endpoints.map(ep =>
+                    ep.id === endpointId ? {
+                        ...ep,
+                        bodyParams: ep.bodyParams.filter((_, i) => i !== paramIndex)
+                    } : ep
+                )
+            }
+        }));
+    };
+
+    const updateBodyParam = (endpointId: string, paramIndex: number, field: string, value: any) => {
+        setFormData(prev => ({
+            ...prev,
+            apiExplorer: {
+                ...prev.apiExplorer,
+                endpoints: prev.apiExplorer.endpoints.map(ep =>
+                    ep.id === endpointId ? {
+                        ...ep,
+                        bodyParams: ep.bodyParams.map((p, i) =>
+                            i === paramIndex ? { ...p, [field]: value } : p
+                        )
+                    } : ep
+                )
+            }
+        }));
+    };
+
     if (!account) {
         return (
             <div className="min-h-screen bg-slate-900">
@@ -166,6 +374,20 @@ export default function CreateServicePage() {
                                     value={formData.name}
                                     onChange={e => setFormData({ ...formData, name: e.target.value })}
                                     placeholder="e.g. Enterprise RPC Node"
+                                    className="w-full px-3 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-slate-600 transition-all"
+                                />
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-slate-300 mb-2">
+                                    Logo URL <span className="text-red-400">*</span>
+                                </label>
+                                <input
+                                    type="url"
+                                    required
+                                    value={formData.logo}
+                                    onChange={e => setFormData({ ...formData, logo: e.target.value })}
+                                    placeholder="https://example.com/logo.png"
                                     className="w-full px-3 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-slate-600 transition-all"
                                 />
                             </div>
@@ -381,6 +603,325 @@ export default function CreateServicePage() {
                                     </div>
                                 ))}
                             </div>
+                        </div>
+
+                        <div className="mt-6 p-4 bg-slate-900/50 rounded-xl border border-slate-700">
+                            <div className="flex items-center justify-between">
+                                <label
+                                    onClick={() => setFormData({
+                                        ...formData,
+                                        freeTier: { ...formData.freeTier, enabled: !formData.freeTier.enabled }
+                                    })}
+                                    className="flex items-center gap-3 cursor-pointer group"
+                                >
+                                    <div className={`shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${formData.freeTier.enabled
+                                        ? 'bg-emerald-500 border-emerald-500'
+                                        : 'border-slate-600 group-hover:border-slate-500'
+                                        }`}
+                                    >
+                                        {formData.freeTier.enabled && (
+                                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        )}
+                                    </div>
+                                    <span className="font-medium text-white group-hover:text-emerald-100 transition-colors">Enable Free Tier</span>
+                                </label>
+                                <span className="text-xs text-slate-400">Free forever, limited requests</span>
+                            </div>
+                            {formData.freeTier.enabled && (
+                                <div className="mt-4 grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs text-slate-400 mb-1">Tier Name</label>
+                                        <input
+                                            type="text"
+                                            value={formData.freeTier.name}
+                                            onChange={e => setFormData({
+                                                ...formData,
+                                                freeTier: { ...formData.freeTier, name: e.target.value }
+                                            })}
+                                            className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-slate-600"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-slate-400 mb-1">Free Requests</label>
+                                        <input
+                                            type="text"
+                                            value={formData.freeTier.requests}
+                                            onChange={e => setFormData({
+                                                ...formData,
+                                                freeTier: { ...formData.freeTier, requests: e.target.value }
+                                            })}
+                                            className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-slate-600"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mt-4 p-4 bg-slate-900/50 rounded-xl border border-slate-700">
+                            <div className="flex items-center justify-between">
+                                <label
+                                    onClick={() => setFormData({
+                                        ...formData,
+                                        enterpriseTier: { ...formData.enterpriseTier, enabled: !formData.enterpriseTier.enabled }
+                                    })}
+                                    className="flex items-center gap-3 cursor-pointer group"
+                                >
+                                    <div className={`shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center transition-all ${formData.enterpriseTier.enabled
+                                        ? 'bg-amber-500 border-amber-500'
+                                        : 'border-slate-600 group-hover:border-slate-500'
+                                        }`}
+                                    >
+                                        {formData.enterpriseTier.enabled && (
+                                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        )}
+                                    </div>
+                                    <span className="font-medium text-white group-hover:text-amber-100 transition-colors">Enable Enterprise Tier</span>
+                                </label>
+                                <span className="text-xs text-slate-400">Custom pricing, contact sales</span>
+                            </div>
+                            {formData.enterpriseTier.enabled && (
+                                <div className="mt-4 grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs text-slate-400 mb-1">Tier Name</label>
+                                        <input
+                                            type="text"
+                                            value={formData.enterpriseTier.name}
+                                            onChange={e => setFormData({
+                                                ...formData,
+                                                enterpriseTier: { ...formData.enterpriseTier, name: e.target.value }
+                                            })}
+                                            className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-slate-600"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-slate-400 mb-1">Contact Label</label>
+                                        <input
+                                            type="text"
+                                            value={formData.enterpriseTier.contactLabel}
+                                            onChange={e => setFormData({
+                                                ...formData,
+                                                enterpriseTier: { ...formData.enterpriseTier, contactLabel: e.target.value }
+                                            })}
+                                            className="w-full px-3 py-2 bg-slate-800/80 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-slate-600"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8">
+                        <h2 className="text-xl font-semibold text-white mb-2">API Explorer</h2>
+                        <p className="text-sm text-slate-400 mb-6">Define interactive API endpoints for your service documentation</p>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-2">Base URL</label>
+                                <input
+                                    type="url"
+                                    value={formData.apiExplorer.baseUrl}
+                                    onChange={e => setFormData({ ...formData, apiExplorer: { ...formData.apiExplorer, baseUrl: e.target.value } })}
+                                    placeholder="https://api.yourservice.com/v1"
+                                    className="w-full px-3 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-slate-600"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-2">Auth Header Name</label>
+                                <input
+                                    type="text"
+                                    value={formData.apiExplorer.authHeader}
+                                    onChange={e => setFormData({ ...formData, apiExplorer: { ...formData.apiExplorer, authHeader: e.target.value } })}
+                                    placeholder="x-api-key"
+                                    className="w-full px-3 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-slate-600"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between mb-4">
+                            <label className="block text-sm font-medium text-slate-300">Endpoints</label>
+                            <button
+                                type="button"
+                                onClick={addEndpoint}
+                                className="flex items-center gap-1 px-3 py-1.5 text-sm text-cyan-400 hover:text-cyan-300 cursor-pointer transition-colors"
+                            >
+                                <PlusIcon className="w-4 h-4" />
+                                Add Endpoint
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            {formData.apiExplorer.endpoints.map((endpoint) => (
+                                <div key={endpoint.id} className="bg-slate-900/50 border border-slate-700 rounded-xl overflow-hidden">
+                                    <button
+                                        type="button"
+                                        onClick={() => setExpandedEndpoint(expandedEndpoint === endpoint.id ? null : endpoint.id)}
+                                        className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-800/50 transition-colors cursor-pointer"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className={`px-2 py-1 text-xs font-medium rounded ${endpoint.method === 'GET' ? 'bg-green-500/20 text-green-400' :
+                                                endpoint.method === 'POST' ? 'bg-blue-500/20 text-blue-400' :
+                                                    endpoint.method === 'PUT' ? 'bg-amber-500/20 text-amber-400' :
+                                                        'bg-red-500/20 text-red-400'
+                                                }`}>{endpoint.method}</span>
+                                            <span className="text-white font-medium">{endpoint.name || 'Unnamed Endpoint'}</span>
+                                            <span className="text-slate-500 text-sm">{endpoint.path || '/path'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); removeEndpoint(endpoint.id); }}
+                                                className="p-1.5 text-slate-400 hover:text-red-400 transition-colors"
+                                            >
+                                                <TrashIcon className="w-4 h-4" />
+                                            </button>
+                                            <svg className={`w-4 h-4 text-slate-400 transition-transform ${expandedEndpoint === endpoint.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </div>
+                                    </button>
+
+                                    {expandedEndpoint === endpoint.id && (
+                                        <div className="px-4 pb-4 space-y-4 border-t border-slate-700/50">
+                                            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 pt-4">
+                                                <div>
+                                                    <label className="block text-xs text-slate-400 mb-1">Method</label>
+                                                    <AnimatedDropdown
+                                                        options={[
+                                                            { id: 'GET', label: 'GET' },
+                                                            { id: 'POST', label: 'POST' },
+                                                            { id: 'PUT', label: 'PUT' },
+                                                            { id: 'DELETE', label: 'DELETE' },
+                                                        ]}
+                                                        value={endpoint.method}
+                                                        onChange={(val) => updateEndpoint(endpoint.id, 'method', val)}
+                                                        placeholder="Method"
+                                                        activeColor="neutral"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-slate-400 mb-1">Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={endpoint.name}
+                                                        onChange={e => updateEndpoint(endpoint.id, 'name', e.target.value)}
+                                                        placeholder="getUsers"
+                                                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-slate-600"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-slate-400 mb-1">Path</label>
+                                                    <input
+                                                        type="text"
+                                                        value={endpoint.path}
+                                                        onChange={e => updateEndpoint(endpoint.id, 'path', e.target.value)}
+                                                        placeholder="/users"
+                                                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-slate-600"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs text-slate-400 mb-1">Description</label>
+                                                    <input
+                                                        type="text"
+                                                        value={endpoint.description}
+                                                        onChange={e => updateEndpoint(endpoint.id, 'description', e.target.value)}
+                                                        placeholder="Get all users"
+                                                        className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-slate-600"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <label className="text-xs font-medium text-slate-300 uppercase tracking-wide">Query Parameters</label>
+                                                    <button type="button" onClick={() => addQueryParam(endpoint.id)} className="text-xs text-cyan-400 hover:text-cyan-300 cursor-pointer">+ Add</button>
+                                                </div>
+                                                {endpoint.queryParams.length > 0 ? (
+                                                    <div className="space-y-2">
+                                                        {endpoint.queryParams.map((param, pIndex) => (
+                                                            <div key={pIndex} className="flex items-center gap-2">
+                                                                <input
+                                                                    type="text"
+                                                                    value={param.name}
+                                                                    onChange={e => updateQueryParam(endpoint.id, pIndex, 'name', e.target.value)}
+                                                                    placeholder="param name"
+                                                                    className="flex-1 px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-xs placeholder-slate-500 focus:outline-none focus:border-slate-600"
+                                                                />
+                                                                <select
+                                                                    value={param.type}
+                                                                    onChange={e => updateQueryParam(endpoint.id, pIndex, 'type', e.target.value)}
+                                                                    className="px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-xs focus:outline-none focus:border-slate-600"
+                                                                >
+                                                                    <option value="string">string</option>
+                                                                    <option value="number">number</option>
+                                                                    <option value="select">select</option>
+                                                                </select>
+                                                                <input
+                                                                    type="text"
+                                                                    value={param.default || ''}
+                                                                    onChange={e => updateQueryParam(endpoint.id, pIndex, 'default', e.target.value)}
+                                                                    placeholder="default"
+                                                                    className="w-20 px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-xs placeholder-slate-500 focus:outline-none focus:border-slate-600"
+                                                                />
+                                                                <button type="button" onClick={() => removeQueryParam(endpoint.id, pIndex)} className="p-1 text-slate-400 hover:text-red-400">
+                                                                    <TrashIcon className="w-3 h-3" />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-xs text-slate-500">No query parameters</p>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <label className="text-xs font-medium text-slate-300 uppercase tracking-wide">Body Parameters</label>
+                                                    <button type="button" onClick={() => addBodyParam(endpoint.id)} className="text-xs text-cyan-400 hover:text-cyan-300 cursor-pointer">+ Add</button>
+                                                </div>
+                                                {endpoint.bodyParams.length > 0 ? (
+                                                    <div className="space-y-2">
+                                                        {endpoint.bodyParams.map((param, pIndex) => (
+                                                            <div key={pIndex} className="flex items-center gap-2">
+                                                                <input
+                                                                    type="text"
+                                                                    value={param.name}
+                                                                    onChange={e => updateBodyParam(endpoint.id, pIndex, 'name', e.target.value)}
+                                                                    placeholder="param name"
+                                                                    className="flex-1 px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-xs placeholder-slate-500 focus:outline-none focus:border-slate-600"
+                                                                />
+                                                                <select
+                                                                    value={param.type}
+                                                                    onChange={e => updateBodyParam(endpoint.id, pIndex, 'type', e.target.value)}
+                                                                    className="px-2 py-1.5 bg-slate-800 border border-slate-700 rounded text-white text-xs focus:outline-none focus:border-slate-600"
+                                                                >
+                                                                    <option value="string">string</option>
+                                                                    <option value="number">number</option>
+                                                                    <option value="select">select</option>
+                                                                </select>
+                                                                <button type="button" onClick={() => removeBodyParam(endpoint.id, pIndex)} className="p-1 text-slate-400 hover:text-red-400">
+                                                                    <TrashIcon className="w-3 h-3" />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-xs text-slate-500">No body parameters</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                            {formData.apiExplorer.endpoints.length === 0 && (
+                                <div className="text-center py-8 text-slate-500 border border-dashed border-slate-700 rounded-xl">
+                                    <p>No endpoints defined yet</p>
+                                    <button type="button" onClick={addEndpoint} className="mt-2 text-cyan-400 hover:text-cyan-300 text-sm cursor-pointer">+ Add your first endpoint</button>
+                                </div>
+                            )}
                         </div>
                     </div>
 

@@ -9,16 +9,29 @@ import { Transaction } from '@mysten/sui/transactions';
 import { ServiceData } from '@/app/data/services';
 import { PACKAGE_ID, REGISTRY_ID } from '@/app/constants';
 import { useUserSubscription, useRequestPrice } from '@/app/hooks/useSubscription';
-import { CheckCircleIcon } from '@heroicons/react/24/outline';
+import { CheckBadgeIcon } from '@heroicons/react/24/outline';
 
 interface ServiceAccessPanelProps {
     service: ServiceData;
 }
 
 export default function ServiceAccessPanel({ service }: ServiceAccessPanelProps) {
+    const hasFreeTier = !!service.freeTier;
+    const hasPerRequest = !!(service.requestPackages && service.requestPackages.length > 0);
+    const hasBundle = !!(service.pricingTiers && service.pricingTiers.length > 0);
+    const hasEnterprise = !!service.enterpriseTier;
+
+    const getDefaultPricingType = (): 'free' | 'perRequest' | 'bundle' | 'enterprise' => {
+        if (hasFreeTier) return 'free';
+        if (hasPerRequest) return 'perRequest';
+        if (hasBundle) return 'bundle';
+        if (hasEnterprise) return 'enterprise';
+        return 'free';
+    };
+
     const [selectedTier, setSelectedTier] = useState(0);
     const [selectedPackage, setSelectedPackage] = useState(0);
-    const [pricingType, setPricingType] = useState<'free' | 'perRequest' | 'bundle' | 'enterprise'>('free');
+    const [pricingType, setPricingType] = useState<'free' | 'perRequest' | 'bundle' | 'enterprise'>(getDefaultPricingType());
     const [isLoading, setIsLoading] = useState(false);
 
     const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
@@ -26,11 +39,6 @@ export default function ServiceAccessPanel({ service }: ServiceAccessPanelProps)
 
     const { data: subscription, isLoading: subLoading, refetch: refetchSubscription } = useUserSubscription(1);
     const { data: requestPrice } = useRequestPrice(1);
-
-    // Log request price to console
-    if (requestPrice !== null && requestPrice !== undefined) {
-        console.log("💰 Request price for service 1:", requestPrice, "MIST");
-    }
 
     const calculatePriceInMist = (): number | null => {
         if (pricingType === 'free') {
@@ -144,25 +152,31 @@ export default function ServiceAccessPanel({ service }: ServiceAccessPanelProps)
                 </h3>
 
                 <div className="flex gap-1 bg-slate-900/50 rounded-lg p-1 mb-4">
-                    <button
-                        onClick={() => setPricingType('free')}
-                        className={`flex-1 px-2 py-2 text-xs rounded-md transition-colors cursor-pointer ${pricingType === 'free' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400 hover:text-white'}`}
-                    >
-                        Free
-                    </button>
-                    <button
-                        onClick={() => setPricingType('perRequest')}
-                        className={`flex-1 px-2 py-2 text-xs rounded-md transition-colors cursor-pointer ${pricingType === 'perRequest' ? 'bg-purple-500/20 text-purple-400' : 'text-slate-400 hover:text-white'}`}
-                    >
-                        Per Request
-                    </button>
-                    <button
-                        onClick={() => setPricingType('bundle')}
-                        className={`flex-1 px-2 py-2 text-xs rounded-md transition-colors cursor-pointer ${pricingType === 'bundle' ? 'bg-cyan-500/20 text-cyan-400' : 'text-slate-400 hover:text-white'}`}
-                    >
-                        Bundle
-                    </button>
-                    {service.pricingTiers?.some(t => t.price === 'Custom') && (
+                    {hasFreeTier && (
+                        <button
+                            onClick={() => setPricingType('free')}
+                            className={`flex-1 px-2 py-2 text-xs rounded-md transition-colors cursor-pointer ${pricingType === 'free' ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400 hover:text-white'}`}
+                        >
+                            Free
+                        </button>
+                    )}
+                    {hasPerRequest && (
+                        <button
+                            onClick={() => setPricingType('perRequest')}
+                            className={`flex-1 px-2 py-2 text-xs rounded-md transition-colors cursor-pointer ${pricingType === 'perRequest' ? 'bg-purple-500/20 text-purple-400' : 'text-slate-400 hover:text-white'}`}
+                        >
+                            Per Request
+                        </button>
+                    )}
+                    {hasBundle && (
+                        <button
+                            onClick={() => setPricingType('bundle')}
+                            className={`flex-1 px-2 py-2 text-xs rounded-md transition-colors cursor-pointer ${pricingType === 'bundle' ? 'bg-cyan-500/20 text-cyan-400' : 'text-slate-400 hover:text-white'}`}
+                        >
+                            Bundle
+                        </button>
+                    )}
+                    {hasEnterprise && (
                         <button
                             onClick={() => setPricingType('enterprise')}
                             className={`flex-1 px-2 py-2 text-xs rounded-md transition-colors cursor-pointer ${pricingType === 'enterprise' ? 'bg-amber-500/20 text-amber-400' : 'text-slate-400 hover:text-white'}`}
@@ -176,14 +190,18 @@ export default function ServiceAccessPanel({ service }: ServiceAccessPanelProps)
                     <div className="space-y-4 mb-4">
                         <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
                             <div className="flex justify-between items-center mb-2">
-                                <span className="font-semibold text-emerald-400">Free Tier</span>
+                                <span className="font-semibold text-emerald-400">
+                                    {service.freeTier?.name || 'Free Tier'}
+                                </span>
                                 <span className="font-bold text-emerald-400">$0</span>
                             </div>
-                            <p className="text-sm text-slate-400">{service.pricingTiers?.find(t => t.price === 'Free')?.requests || '1K/day'}</p>
+                            <p className="text-sm text-slate-400">
+                                {service.freeTier?.requests ? `${service.freeTier.requests} requests` : '10 requests'}
+                            </p>
                             <ul className="mt-3 space-y-1">
-                                {service.pricingTiers?.find(t => t.price === 'Free')?.features.map((f, i) => (
+                                {(service.freeTier?.features || ['Basic endpoints', 'Community support']).map((f, i) => (
                                     <li key={i} className="text-xs text-slate-400 flex items-center gap-2">
-                                        <CheckCircleIcon className="w-3 h-3 text-emerald-400" />{f}
+                                        <CheckBadgeIcon className="w-3 h-3 text-emerald-400" />{f}
                                     </li>
                                 ))}
                             </ul>
@@ -243,18 +261,20 @@ export default function ServiceAccessPanel({ service }: ServiceAccessPanelProps)
                     </div>
                 )}
 
-                {pricingType === 'enterprise' && (
+                {pricingType === 'enterprise' && service.enterpriseTier && (
                     <div className="space-y-4 mb-4">
                         <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
                             <div className="flex justify-between items-center mb-2">
-                                <span className="font-semibold text-amber-400">Enterprise</span>
+                                <span className="font-semibold text-amber-400">
+                                    {service.enterpriseTier.name}
+                                </span>
                                 <span className="font-bold text-amber-400">Custom</span>
                             </div>
                             <p className="text-sm text-slate-400">Unlimited requests</p>
                             <ul className="mt-3 space-y-1">
-                                {service.pricingTiers?.find(t => t.price === 'Custom')?.features.map((f, i) => (
+                                {service.enterpriseTier.features.map((f, i) => (
                                     <li key={i} className="text-xs text-slate-400 flex items-center gap-2">
-                                        <CheckCircleIcon className="w-3 h-3 text-amber-400" />{f}
+                                        <CheckBadgeIcon className="w-3 h-3 text-amber-400" />{f}
                                     </li>
                                 ))}
                             </ul>

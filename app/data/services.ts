@@ -1,11 +1,80 @@
+export interface ApiParamOption {
+  id: string;
+  label: string;
+}
+
+export interface ApiParam {
+  name: string;
+  type: "string" | "number" | "select";
+  default?: string | number;
+  options?: ApiParamOption[];
+  description?: string;
+}
+
+export interface ApiEndpoint {
+  id: string;
+  name: string;
+  method: "GET" | "POST" | "PUT" | "DELETE";
+  path: string;
+  description: string;
+  queryParams?: ApiParam[];
+  bodyParams?: ApiParam[];
+}
+
+export interface ApiExplorer {
+  baseUrl: string;
+  authHeader?: string;
+  endpoints: ApiEndpoint[];
+}
+
+// Service feature displayed on Overview page
+export interface ServiceFeature {
+  icon: "latency" | "uptime" | "entitlements" | "payments" | "security" | "custom";
+  title: string;
+  description: string;
+}
+
+// Free tier configuration
+export interface FreeTier {
+  name: string;
+  requests: number;
+  features: string[];
+  isForever?: boolean;
+}
+
+// Enterprise tier configuration
+export interface EnterpriseTier {
+  name: string;
+  features: string[];
+  contactLabel?: string;
+}
+
+// Pricing tier with type
+export interface PricingTier {
+  name: string;
+  price: string;
+  requests?: string;
+  features?: string[];
+  type?: "subscription" | "one-time"; // Optional for backward compat
+  period?: string; // "monthly", "yearly", "1K/day"
+}
+
+// Request package (one-time purchase)
+export interface RequestPackage {
+  name: string;
+  requests: number;
+  price: string;
+  pricePerRequest?: string;
+}
+
 export interface ServiceData {
   id: string;
   name: string;
   description: string;
   fullDescription?: string;
-  price_ms: number; // Price in Milliseconds or similar unit for internal calculation
+  price_ms: number;
   provider: string;
-  logo: string; // NEW FIELD
+  logo: string;
   providerAvatar?: string;
   category: string;
   tags: string[];
@@ -16,21 +85,20 @@ export interface ServiceData {
   endpoint?: string;
   docsUrl?: string;
   supportUrl?: string;
-  pricingTiers?: {
-    name: string;
-    price: string;
-    requests: string;
-    features: string[];
-  }[];
-  requestPackages?: {
-    name: string;
-    requests: number;
-    price: string;
-    pricePerRequest?: string;
-  }[];
+
+  // Configurable features displayed on Overview
+  features?: ServiceFeature[];
+
+  // Pricing structure
+  freeTier?: FreeTier;
+  pricingTiers?: PricingTier[];
+  requestPackages?: RequestPackage[];
+  enterpriseTier?: EnterpriseTier;
+
   acceptingNewUsers?: boolean;
   latency?: string;
   uptime?: string;
+  apiExplorer?: ApiExplorer;
 }
 
 export const SERVICES: ServiceData[] = [
@@ -88,26 +156,41 @@ curl --request POST \\
     acceptingNewUsers: true,
     latency: "<100ms",
     uptime: "99.9%",
-    pricingTiers: [
+    // Service Features displayed on Overview
+    features: [
+      { icon: "latency", title: "Low Latency", description: "<100ms response" },
+      { icon: "uptime", title: "High Availability", description: "99.9% uptime" },
       {
-        name: "Free",
-        price: "Free",
-        requests: "10 requests",
-        features: ["Basic endpoints", "Community support"],
+        icon: "entitlements",
+        title: "On-Chain Entitlements",
+        description: "Verified access via Sui",
       },
+      { icon: "payments", title: "Multi-Token Payments", description: "SUI, USDC" },
+    ],
+    // Free Tier
+    freeTier: {
+      name: "Free Tier",
+      requests: 10,
+      features: ["Basic endpoints", "Community support"],
+      isForever: true,
+    },
+    // Pricing Tiers (subscriptions)
+    pricingTiers: [
       {
         name: "Pro",
         price: "0.0005 SUI/s",
         requests: "1K/day",
         features: ["All endpoints", "DeFi data", "Priority support"],
-      },
-      {
-        name: "Enterprise",
-        price: "Custom",
-        requests: "Unlimited",
-        features: ["Dedicated support", "Custom indexing", "SLA guarantee"],
+        type: "subscription",
+        period: "monthly",
       },
     ],
+    // Enterprise Tier
+    enterpriseTier: {
+      name: "Enterprise",
+      features: ["Dedicated support", "Custom indexing", "SLA guarantee"],
+      contactLabel: "Contact Sales",
+    },
     requestPackages: [
       {
         name: "Starter Pack",
@@ -128,6 +211,79 @@ curl --request POST \\
         pricePerRequest: "0.003 SUI/req",
       },
     ],
+    apiExplorer: {
+      baseUrl: "https://api.blockberry.one/sui/v1",
+      authHeader: "x-api-key",
+      endpoints: [
+        {
+          id: "getDefis",
+          name: "getDefis",
+          method: "POST",
+          path: "/defi",
+          description: "Get a list of all DeFis provided by DefiLlama",
+          queryParams: [
+            { name: "page", type: "number", default: 0 },
+            { name: "size", type: "number", default: 20 },
+            {
+              name: "orderBy",
+              type: "select",
+              default: "DESC",
+              options: [
+                { id: "DESC", label: "Descending" },
+                { id: "ASC", label: "Ascending" },
+              ],
+            },
+            {
+              name: "sortBy",
+              type: "select",
+              default: "CURRENT_TVL",
+              options: [
+                { id: "CURRENT_TVL", label: "Current TVL" },
+                { id: "VOLUME_24H", label: "Volume 24H" },
+                { id: "CHANGE_24H", label: "Change 24H" },
+              ],
+            },
+          ],
+          bodyParams: [
+            {
+              name: "categories",
+              type: "select",
+              options: [
+                { id: "DEX", label: "DEX" },
+                { id: "Lending", label: "Lending" },
+                { id: "Bridge", label: "Bridge" },
+                { id: "Yield", label: "Yield" },
+                { id: "CDP", label: "CDP" },
+                { id: "Derivatives", label: "Derivatives" },
+                { id: "Liquid Staking", label: "Liquid Staking" },
+              ],
+            },
+          ],
+        },
+        {
+          id: "getDex",
+          name: "getDex",
+          method: "POST",
+          path: "/defi/dex",
+          description: "Get detailed DEX information",
+          queryParams: [
+            { name: "page", type: "number", default: 0 },
+            { name: "size", type: "number", default: 20 },
+          ],
+        },
+        {
+          id: "getPackages",
+          name: "getPackages",
+          method: "GET",
+          path: "/packages",
+          description: "Get all packages",
+          queryParams: [
+            { name: "page", type: "number", default: 0 },
+            { name: "size", type: "number", default: 20 },
+          ],
+        },
+      ],
+    },
   },
   {
     id: "quicknode-sui",

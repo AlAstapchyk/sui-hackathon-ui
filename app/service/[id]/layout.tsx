@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
-import { getService } from '@/app/lib/service-utils';
+import { getServiceById } from '@/app/lib/service-utils';
 import ServiceHeader from '@/app/components/service/ServiceHeader';
 import ServiceNav from '@/app/components/service/ServiceNav';
 import ServiceAccessPanel from '@/app/components/service/ServiceAccessPanel';
@@ -14,7 +14,7 @@ interface ServiceLayoutProps {
 
 export default async function ServiceLayout({ children, params }: ServiceLayoutProps) {
     const { id } = await params;
-    const service = getService(id);
+    const service = await getServiceById(id);
 
     if (!service) {
         notFound();

@@ -1,7 +1,31 @@
-import { SERVICES, ServiceData } from "@/app/data/services";
+import { ServiceData } from "@/app/data/services";
+import { connectToDatabase } from "./mongodb";
 
-export function getService(id: string): ServiceData | undefined {
-  return SERVICES.find((s) => s.id === id);
+// Get service by ID from MongoDB
+export async function getServiceById(id: string): Promise<ServiceData | undefined> {
+  try {
+    const { db } = await connectToDatabase();
+    const mongoService = await db.collection("services").findOne({ id });
+    if (mongoService) {
+      const { _id, ...service } = mongoService;
+      return service as ServiceData;
+    }
+  } catch (error) {
+    console.error("Error fetching service from MongoDB:", error);
+  }
+  return undefined;
+}
+
+// Get all services from MongoDB
+export async function getAllServices(): Promise<ServiceData[]> {
+  try {
+    const { db } = await connectToDatabase();
+    const mongoServices = await db.collection("services").find({}).toArray();
+    return mongoServices.map(({ _id, ...service }) => service as ServiceData);
+  } catch (error) {
+    console.error("Error fetching services from MongoDB:", error);
+    return [];
+  }
 }
 
 export function formatPrice(priceMist: number): string {

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getService } from '@/app/lib/service-utils';
+import { getServiceById } from '@/app/lib/service-utils';
 import ServicePricingDisplay from '@/app/components/service/ServicePricingDisplay';
 
 interface ServicePricingPageProps {
@@ -8,7 +8,7 @@ interface ServicePricingPageProps {
 
 export default async function ServicePricingPage({ params }: ServicePricingPageProps) {
     const { id } = await params;
-    const service = getService(id);
+    const service = await getServiceById(id);
 
     if (!service) {
         notFound();

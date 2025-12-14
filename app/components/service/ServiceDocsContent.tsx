@@ -3,7 +3,7 @@ import {
     DocumentTextIcon,
     GlobeAltIcon,
 } from '@heroicons/react/24/outline';
-import BlockberryApiExplorer from './BlockberryApiExplorer';
+import ServiceApiExplorer from './ServiceApiExplorer';
 
 interface ServiceDocsContentProps {
     service: ServiceData;
@@ -47,35 +47,19 @@ export default function ServiceDocsContent({ service }: ServiceDocsContentProps)
                 )}
             </div>
 
-            {service.id === 'blockberry-api' && (
-                <BlockberryApiExplorer />
+            {service.apiExplorer && (
+                <ServiceApiExplorer service={service} />
             )}
 
-            {service.id !== 'blockberry-api' && (
-                <div className="bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8">
-                    <h2 className="text-xl font-bold text-white mb-6">Integration</h2>
-                    <div className="bg-slate-900 rounded-xl p-4 font-mono text-sm overflow-x-auto mb-6">
-                        <p className="text-slate-400 mb-2"># Install the SDK</p>
-                        <p className="text-green-400 mb-4">npm install @sui-infra/client</p>
-                        <p className="text-slate-400 mb-2"># Initialize</p>
-                        <p className="text-cyan-400">const client = new InfraClient({"{"}</p>
-                        <p className="text-cyan-400 pl-4">serviceId: &quot;{service.id.slice(0, 20)}...&quot;,</p>
-                        <p className="text-cyan-400 pl-4">wallet: yourWallet</p>
-                        <p className="text-cyan-400">{"}"});</p>
-                    </div>
-                    {service.supportUrl && (
-                        <a
-                            href={service.supportUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors cursor-pointer w-fit"
-                        >
-                            <GlobeAltIcon className="w-5 h-5" />
-                            <span>Support</span>
-                        </a>
-                    )}
+            {/* No documentation fallback */}
+            {!service.apiExplorer && !service.docsUrl && !service.supportUrl && (
+                <div className="bg-slate-800/50 border border-dashed border-slate-600 rounded-2xl p-8 text-center">
+                    <DocumentTextIcon className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-slate-300 mb-2">No Documentation Available</h3>
+                    <p className="text-slate-500">This service hasn&apos;t added documentation yet.</p>
                 </div>
             )}
         </div>
     );
 }
+
