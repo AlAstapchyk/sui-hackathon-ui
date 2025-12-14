@@ -8,7 +8,7 @@ import {
 import { Transaction } from '@mysten/sui/transactions';
 import { ServiceData } from '@/app/data/services';
 import { PACKAGE_ID, REGISTRY_ID } from '@/app/constants';
-import { useUserSubscription, useRequestPrice } from '@/app/hooks/useSubscription';
+import { useUserSubscription } from '@/app/hooks/useSubscription';
 import { CheckBadgeIcon } from '@heroicons/react/24/outline';
 
 interface ServiceAccessPanelProps {
@@ -38,7 +38,7 @@ export default function ServiceAccessPanel({ service }: ServiceAccessPanelProps)
     const account = useCurrentAccount();
 
     const { data: subscription, isLoading: subLoading, refetch: refetchSubscription } = useUserSubscription(1);
-    const { data: requestPrice } = useRequestPrice(1);
+    // const { data: requestPrice } = useRequestPrice(1);
 
     const calculatePriceInMist = (): number | null => {
         if (pricingType === 'free') {
@@ -82,8 +82,8 @@ export default function ServiceAccessPanel({ service }: ServiceAccessPanelProps)
             return;
         }
 
-        // const priceInMist = calculatePriceInMist();
-        const priceInMist = 3000;
+        const priceInMist = calculatePriceInMist();
+        // const priceInMist = 3000;
         if (priceInMist === null) {
             alert("Unable to calculate price");
             return;

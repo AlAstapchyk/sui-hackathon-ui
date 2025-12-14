@@ -41,7 +41,6 @@ export async function POST(request: NextRequest) {
     const { db } = await connectToDatabase();
     const collection = db.collection("services");
 
-    // Generate unique ID
     const id =
       name
         .toLowerCase()
@@ -70,11 +69,7 @@ export async function POST(request: NextRequest) {
       endpoint: endpoint || "",
       docsUrl: docsUrl || "",
       supportUrl: supportUrl || "",
-
-      // Service features
       features: features || [],
-
-      // Pricing
       freeTier: freeTier?.name
         ? {
             name: freeTier.name,

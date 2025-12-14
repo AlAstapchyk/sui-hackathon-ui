@@ -58,7 +58,6 @@ export default function ProviderDashboardPage() {
         setIsRegistering(false);
     };
 
-    // Memoize computed values to prevent unnecessary recalculations
     const stats = useMemo(() => ({
         totalServices: services.length,
         activeServices: services.filter(s => s.acceptingNewUsers !== false).length,
@@ -66,7 +65,6 @@ export default function ProviderDashboardPage() {
         hasApiExplorer: services.filter(s => s.apiExplorer).length,
     }), [services]);
 
-    // Mark initial load complete after services load
     useEffect(() => {
         if (!servicesLoading && isInitialLoad) {
             const timer = setTimeout(() => setIsInitialLoad(false), 50);
@@ -77,7 +75,6 @@ export default function ProviderDashboardPage() {
     if (!account) {
         return (
             <div className="min-h-screen bg-slate-900 relative overflow-hidden">
-                {/* Background Effects */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-1/4 -left-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
                     <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
@@ -98,11 +95,9 @@ export default function ProviderDashboardPage() {
         );
     }
 
-    // Loading state
     if (isLoading) {
         return (
             <div className="min-h-screen bg-slate-900 flex items-center justify-center relative overflow-hidden">
-                {/* Background Effects */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-1/4 -left-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
                     <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
@@ -116,11 +111,9 @@ export default function ProviderDashboardPage() {
         );
     }
 
-    // Not registered - show registration form
     if (!isRegistered) {
         return (
             <div className="min-h-screen bg-slate-900 relative overflow-hidden">
-                {/* Background Effects */}
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
                     <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-3xl" />
                     <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-3xl" />
@@ -247,7 +240,6 @@ export default function ProviderDashboardPage() {
 
     return (
         <div className="min-h-screen bg-slate-900 relative overflow-hidden">
-            {/* Background Effects */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-3xl" />
@@ -255,7 +247,6 @@ export default function ProviderDashboardPage() {
             </div>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-                {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-10">
                     <div>
                         <div className="flex items-center gap-3 mb-3">
@@ -276,7 +267,6 @@ export default function ProviderDashboardPage() {
                     </Link>
                 </div>
 
-                {/* Stats Grid */}
                 <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10 transition-opacity duration-300 ${isInitialLoad ? 'opacity-0' : 'opacity-100'}`}>
                     {statCards.map((card, i) => (
                         <div key={i} className="group relative">
@@ -298,7 +288,6 @@ export default function ProviderDashboardPage() {
                     ))}
                 </div>
 
-                {/* Services Table */}
                 <div className={`relative transition-opacity duration-300 ${isInitialLoad ? 'opacity-0' : 'opacity-100'}`}>
                     <div className="absolute inset-0 bg-gradient-to-r from-slate-800/50 to-slate-800/30 rounded-2xl blur-xl" />
                     <div className="relative bg-slate-800/30 backdrop-blur-xl border border-slate-700/50 rounded-2xl overflow-hidden">
@@ -450,7 +439,6 @@ export default function ProviderDashboardPage() {
                     </div>
                 </div>
 
-                {/* Provider Tips Section */}
                 {services.length > 0 && (
                     <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="group relative">

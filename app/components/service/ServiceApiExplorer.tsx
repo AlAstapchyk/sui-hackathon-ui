@@ -21,7 +21,6 @@ interface ServiceApiExplorerProps {
 export default function ServiceApiExplorer({ service }: ServiceApiExplorerProps) {
     const apiExplorer = service.apiExplorer;
 
-    // All hooks must be called before any early returns
     const [copied, setCopied] = useState<string | null>(null);
     const [selectedEndpoint, setSelectedEndpoint] = useState<ApiEndpoint | null>(
         apiExplorer?.endpoints[0] ?? null
@@ -32,13 +31,11 @@ export default function ServiceApiExplorer({ service }: ServiceApiExplorerProps)
     const [responseStatus, setResponseStatus] = useState<number | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [codeLanguage, setCodeLanguage] = useState<CodeLanguage>('shell');
-    // Dynamic param values
     const [paramValues, setParamValues] = useState<Record<string, any>>({});
 
     const account = useCurrentAccount();
     const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
 
-    // Helper functions that handle null safely
     const getParamValue = (param: ApiParam) => {
         return paramValues[param.name] ?? param.default ?? (param.type === 'number' ? 0 : '');
     };
@@ -60,7 +57,6 @@ export default function ServiceApiExplorer({ service }: ServiceApiExplorerProps)
         return body;
     };
 
-    // useMemo must be before early return
     const codeExamples = useMemo(() => {
         if (!apiExplorer || !selectedEndpoint) {
             return { shell: '', nodejs: '', python: '' };
@@ -139,55 +135,32 @@ print(response.json())`
         setResponseStatus(null);
 
         try {
-            // const queryString = buildQueryString();
-            // const bodyObj = buildBodyObject();
-
-            // const message = JSON.stringify({
-            //     method: selectedEndpoint.method,
-            //     url: `${selectedEndpoint.path}${queryString}`,
-            //     data: bodyObj,
-            // });
-
-            // const result = await signPersonalMessage({
-            //     message: new TextEncoder().encode(message),
-            // });
-
-            // const backendUrl = `${PROXY_URL}${selectedEndpoint.path}${queryString}`;
-
-            // const res = await fetch(backendUrl, {
-            //     method: selectedEndpoint.method,
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //         'X-API-KEY': API_KEY,
-            //     },
-            //     body: JSON.stringify({
-            //         owner: account.address,
-            //         signature: result.signature,
-            //         data: bodyObj,
-            //     }),
-            // });
-
-            // setResponseStatus(res.status);
-            // const data = await res.json();
-            // if (!res.ok) {
-            //     setError(data.message || data.error || `Error ${res.status}`);
-            // }
-            // setResponse(data);
-
-            // Direct Blockberry API test (bypassing proxy)
-
             const queryString = buildQueryString();
             const bodyObj = buildBodyObject();
-            const directUrl = `${apiExplorer.baseUrl}${selectedEndpoint.path}${queryString}`;
 
-            const res = await fetch(directUrl, {
+            const message = JSON.stringify({
+                method: selectedEndpoint.method,
+                url: `${selectedEndpoint.path}${queryString}`,
+                data: bodyObj,
+            });
+
+            const result = await signPersonalMessage({
+                message: new TextEncoder().encode(message),
+            });
+
+            const backendUrl = `${PROXY_URL}${selectedEndpoint.path}${queryString}`;
+
+            const res = await fetch(backendUrl, {
                 method: selectedEndpoint.method,
                 headers: {
-                    'accept': '*/*',
-                    'content-type': 'application/json',
-                    'x-api-key': API_KEY,
+                    'Content-Type': 'application/json',
+                    'X-API-KEY': API_KEY,
                 },
-                body: bodyObj ? JSON.stringify(bodyObj) : undefined,
+                body: JSON.stringify({
+                    owner: account.address,
+                    signature: result.signature,
+                    data: bodyObj,
+                }),
             });
 
             setResponseStatus(res.status);
@@ -196,6 +169,29 @@ print(response.json())`
                 setError(data.message || data.error || `Error ${res.status}`);
             }
             setResponse(data);
+
+            // Direct Blockberry API test (bypassing proxy)
+
+            // const queryString = buildQueryString();
+            // const bodyObj = buildBodyObject();
+            // const directUrl = `${apiExplorer.baseUrl}${selectedEndpoint.path}${queryString}`;
+
+            // const res = await fetch(directUrl, {
+            //     method: selectedEndpoint.method,
+            //     headers: {
+            //         'accept': '*/*',
+            //         'content-type': 'application/json',
+            //         'x-api-key': API_KEY,
+            //     },
+            //     body: bodyObj ? JSON.stringify(bodyObj) : undefined,
+            // });
+
+            // setResponseStatus(res.status);
+            // const data = await res.json();
+            // if (!res.ok) {
+            //     setError(data.message || data.error || `Error ${res.status}`);
+            // }
+            // setResponse(data);
         } catch (err: any) {
             setError(err.message || 'Network error');
             setResponseStatus(500);

@@ -75,7 +75,7 @@ export default function ServicePricingPanel({
                             </div>
                             <p className="text-sm text-slate-400 mb-3">{freeTier.requests}</p>
                             <ul className="space-y-1">
-                                {freeTier.features.map((f, i) => (
+                                {(freeTier.features || []).map((f, i) => (
                                     <li key={i} className="text-sm text-slate-300 flex items-center gap-2">
                                         <CheckCircleIcon className="w-4 h-4 text-emerald-400" />{f}
                                     </li>

@@ -9,8 +9,8 @@ import FilterBar from './FilterBar';
 interface PricingTier {
     name: string;
     price: string;
-    requests: string;
-    features: string[];
+    requests?: string;
+    features?: string[];
 }
 
 interface ServiceWithPricing extends Service {

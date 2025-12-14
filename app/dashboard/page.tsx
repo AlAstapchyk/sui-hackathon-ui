@@ -88,7 +88,6 @@ export default function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-slate-900 relative overflow-hidden">
-            {/* Background Effects */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-3xl" />
@@ -96,7 +95,6 @@ export default function DashboardPage() {
             </div>
 
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-                {/* Header with animated gradient */}
                 <div className="mb-10">
                     <div className="flex items-center gap-3 mb-3">
                         <div className="h-8 w-1 bg-gradient-to-b from-cyan-400 to-teal-500 rounded-full" />
@@ -107,7 +105,6 @@ export default function DashboardPage() {
                     <p className="text-slate-400 ml-4 text-lg">Manage your service subscriptions and usage</p>
                 </div>
 
-                {/* Subscriptions Table with premium design */}
                 <div className="relative mb-8">
                     <div className="absolute inset-0 bg-gradient-to-r from-slate-800/50 to-slate-800/30 rounded-2xl blur-xl" />
                     <div className="relative bg-slate-800/30 backdrop-blur-xl border border-slate-700/50 rounded-2xl overflow-hidden">
@@ -124,7 +121,6 @@ export default function DashboardPage() {
                             </Link>
                         </div>
 
-                        {/* Content with fade transition */}
                         <div className={`transition-opacity duration-300 ${isInitialLoad ? 'opacity-0' : 'opacity-100'}`}>
                             {isLoading ? (
                                 <div className="p-12 text-center">
@@ -239,9 +235,7 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* Stats Cards with premium design */}
                 <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10 transition-opacity duration-300 ${isInitialLoad ? 'opacity-0' : 'opacity-100'}`}>
-                    {/* Active Subscriptions Card */}
                     <div className="group relative">
                         <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-2xl blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-500" />
                         <div className="relative bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 hover:border-emerald-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/10">
@@ -271,7 +265,6 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* Requests Available Card */}
                     <div className="group relative">
                         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-500" />
                         <div className="relative bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 hover:border-purple-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10">
@@ -292,7 +285,6 @@ export default function DashboardPage() {
                                     <span>Credits</span>
                                 </div>
                             </div>
-                            {/* Progress bar */}
                             <div className="mt-4 pt-4 border-t border-slate-700/50">
                                 <div className="flex items-center justify-between text-sm mb-2">
                                     <span className="text-slate-500">Usage this month</span>
@@ -305,7 +297,6 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    {/* Quick Actions Card */}
                     <div className="group relative md:col-span-2 lg:col-span-1">
                         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-2xl blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-500" />
                         <div className="relative bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-6 hover:border-cyan-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10">

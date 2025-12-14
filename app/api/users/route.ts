@@ -21,13 +21,11 @@ export async function POST(request: NextRequest) {
     const { db } = await connectToDatabase();
     const collection = db.collection<User>("users");
 
-    // Check if user already exists
     const existingUser = await collection.findOne({ address });
     if (existingUser) {
       return NextResponse.json({ user: existingUser, created: false });
     }
 
-    // Create new user
     const newUser: User = {
       address,
       nickname: nickname || `User_${address.slice(0, 6)}`,

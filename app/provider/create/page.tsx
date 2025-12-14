@@ -42,11 +42,8 @@ export default function CreateServicePage() {
         endpoint: '',
         docsUrl: '',
         supportUrl: '',
-        // Verification
         requestVerification: false,
-        // Service Features (displayed on Overview)
         features: [] as { icon: string; title: string; description: string }[],
-        // Free Tier
         freeTier: {
             enabled: false,
             name: 'Free Tier',
@@ -54,20 +51,16 @@ export default function CreateServicePage() {
             features: ['Basic endpoints', 'Community support'],
             isForever: true,
         },
-        // Pricing Tiers (Subscriptions)
         pricingTiers: [] as { name: string; price: string; requests: string; features: string[]; type: string; period: string }[],
-        // Request Packages (One-time)
         requestPackages: [
             { requests: '1000', price: '1' }
         ],
-        // Enterprise Tier
         enterpriseTier: {
             enabled: false,
             name: 'Enterprise',
             features: ['Dedicated support', 'Custom indexing', 'SLA guarantee'],
             contactLabel: 'Contact Sales',
         },
-        // API Explorer
         apiExplorer: {
             baseUrl: '',
             authHeader: 'x-api-key',
@@ -96,7 +89,6 @@ export default function CreateServicePage() {
         setLoading(true);
 
         try {
-            // Transform data - only include enabled tiers
             const submitData = {
                 ...formData,
                 freeTier: formData.freeTier.enabled ? {
@@ -150,7 +142,7 @@ export default function CreateServicePage() {
     const addPricingTier = () => {
         setFormData(prev => ({
             ...prev,
-            pricingTiers: [...prev.pricingTiers, { name: '', price: '', requests: '', features: [] }]
+            pricingTiers: [...prev.pricingTiers, { name: '', price: '', requests: '', features: [], type: 'subscription', period: 'monthly' }]
         }));
     };
 

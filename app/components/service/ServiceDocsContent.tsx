@@ -51,7 +51,6 @@ export default function ServiceDocsContent({ service }: ServiceDocsContentProps)
                 <ServiceApiExplorer service={service} />
             )}
 
-            {/* No documentation fallback */}
             {!service.apiExplorer && !service.docsUrl && !service.supportUrl && (
                 <div className="bg-slate-800/50 border border-dashed border-slate-600 rounded-2xl p-8 text-center">
                     <DocumentTextIcon className="w-12 h-12 text-slate-500 mx-auto mb-4" />
