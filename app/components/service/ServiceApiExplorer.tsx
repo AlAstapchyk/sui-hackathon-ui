@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { API_KEY, PROXY_URL } from '@/app/constants';
 import { ServiceData, ApiEndpoint, ApiParam } from '@/app/data/services';
+import { mockResponse } from './mocks';
 
 type CodeLanguage = 'shell' | 'nodejs' | 'python';
 
@@ -158,21 +159,23 @@ print(response.json())`
 
             console.log(body)
 
-            const res = await fetch(backendUrl, {
-                method: selectedEndpoint.method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': API_KEY,
-                },
-                body,
-            });
+            // ** We commited it because the Blockberry API is under maintenance today.
 
-            setResponseStatus(res.status);
-            const data = await res.json();
-            if (!res.ok) {
-                setError(data.message || data.error || `Error ${res.status}`);
-            }
-            setResponse(data);
+            // const res = await fetch(backendUrl, {
+            //     method: selectedEndpoint.method,
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //         'X-API-KEY': API_KEY,
+            //     },
+            //     body,
+            // });
+
+            // setResponseStatus(res.status);
+            // const data = await res.json();
+            // if (!res.ok) {
+            //     setError(data.message || data.error || `Error ${res.status}`);
+            // }
+            setResponse(mockResponse);
 
             // Direct Blockberry API test (bypassing proxy)
 
