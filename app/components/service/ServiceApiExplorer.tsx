@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { API_KEY, PROXY_URL } from '@/app/constants';
 import { ServiceData, ApiEndpoint, ApiParam } from '@/app/data/services';
+import { mockResponse } from './mocks';
 
 type CodeLanguage = 'shell' | 'nodejs' | 'python';
 
@@ -150,25 +151,26 @@ print(response.json())`
 
             const backendUrl = `${PROXY_URL}${selectedEndpoint.path}${queryString}`;
 
-            const res = await fetch(backendUrl, {
-                method: selectedEndpoint.method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-KEY': API_KEY,
-                },
-                body: JSON.stringify({
-                    owner: account.address,
-                    signature: result.signature,
-                    data: bodyObj,
-                }),
-            });
+            // ** We commited it because the Blockberry API is under maintenance today.
+            // const res = await fetch(backendUrl, {
+            //     method: selectedEndpoint.method,
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //         'X-API-KEY': API_KEY,
+            //     },
+            //     body: JSON.stringify({
+            //         owner: account.address,
+            //         signature: result.signature,
+            //         data: bodyObj,
+            //     }),
+            // });
 
-            setResponseStatus(res.status);
-            const data = await res.json();
-            if (!res.ok) {
-                setError(data.message || data.error || `Error ${res.status}`);
-            }
-            setResponse(data);
+            // setResponseStatus(res.status);
+            // const data = await res.json();
+            // if (!res.ok) {
+            //     setError(data.message || data.error || `Error ${res.status}`);
+            // }
+            setResponse(mockResponse);
 
             // Direct Blockberry API test (bypassing proxy)
 
