@@ -1,7 +1,6 @@
 import { ServiceData } from "@/app/data/services";
 import { connectToDatabase } from "./mongodb";
 
-// Get service by ID from MongoDB
 export async function getServiceById(id: string): Promise<ServiceData | undefined> {
   try {
     const { db } = await connectToDatabase();
@@ -16,7 +15,6 @@ export async function getServiceById(id: string): Promise<ServiceData | undefine
   return undefined;
 }
 
-// Get all services from MongoDB
 export async function getAllServices(): Promise<ServiceData[]> {
   try {
     const { db } = await connectToDatabase();

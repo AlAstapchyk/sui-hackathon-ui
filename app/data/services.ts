@@ -1,3 +1,5 @@
+// used to quickly change mongo db structure and data with 
+
 export interface ApiParamOption {
   id: string;
   label: string;
@@ -27,14 +29,12 @@ export interface ApiExplorer {
   endpoints: ApiEndpoint[];
 }
 
-// Service feature displayed on Overview page
 export interface ServiceFeature {
   icon: "latency" | "uptime" | "entitlements" | "payments" | "security" | "custom";
   title: string;
   description: string;
 }
 
-// Free tier configuration
 export interface FreeTier {
   name: string;
   requests: number;
@@ -42,14 +42,12 @@ export interface FreeTier {
   isForever?: boolean;
 }
 
-// Enterprise tier configuration
 export interface EnterpriseTier {
   name: string;
   features: string[];
   contactLabel?: string;
 }
 
-// Pricing tier with type
 export interface PricingTier {
   name: string;
   price: string;
@@ -59,7 +57,6 @@ export interface PricingTier {
   period?: string; // "monthly", "yearly", "1K/day"
 }
 
-// Request package (one-time purchase)
 export interface RequestPackage {
   name: string;
   requests: number;
