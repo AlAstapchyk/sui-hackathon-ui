@@ -150,17 +150,21 @@ print(response.json())`
 
             const backendUrl = `${PROXY_URL}${selectedEndpoint.path}${queryString}`;
 
+            const body = JSON.stringify({
+                owner: account.address,
+                signature: result.signature,
+                data: bodyObj,
+            });
+
+            console.log(body)
+
             const res = await fetch(backendUrl, {
                 method: selectedEndpoint.method,
                 headers: {
                     'Content-Type': 'application/json',
                     'X-API-KEY': API_KEY,
                 },
-                body: JSON.stringify({
-                    owner: account.address,
-                    signature: result.signature,
-                    data: bodyObj,
-                }),
+                body,
             });
 
             setResponseStatus(res.status);

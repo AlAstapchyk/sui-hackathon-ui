@@ -38,7 +38,6 @@ export default function ServiceAccessPanel({ service }: ServiceAccessPanelProps)
     const account = useCurrentAccount();
 
     const { data: subscription, isLoading: subLoading, refetch: refetchSubscription } = useUserSubscription(1);
-    // const { data: requestPrice } = useRequestPrice(1);
 
     const calculatePriceInMist = (): number | null => {
         if (pricingType === 'free') {
